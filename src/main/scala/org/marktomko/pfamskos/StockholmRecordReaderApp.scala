@@ -41,8 +41,12 @@ object StockholmRecordReader {
 
   // line types
   val AC = "AC" // accession
+  val CC = "CC" // comment
+  val CL = "CL" // clan accession
   val DE = "DE" // description
   val MB = "MB" // member protein family
+  val RM = "RM" // medline reference number
+  val TP = "TP" // type
 
   // this matches any line that is not a start, end, or part of an alignment
   // the capturing groups are the prefix, and the rest of the line, which may 
@@ -82,11 +86,15 @@ object StockholmRecordReader {
             if (field == ID) {
               id = value
             } else {
-              val values =
-                if (map.contains(field)) map(field)
-                else new ListBuffer[String]
-              values += value
-              map += (field -> values)
+              field match {
+                case AC | CC | CL | DE | MB | RM | TP =>
+                  val values =
+                      if (map.contains(field)) map(field)
+                      else new ListBuffer[String]
+                  values += value
+                  map += (field -> values)
+                case _ =>
+              }
             }
           case GS =>
             val GS_ANNOTATION(protein, field, value) = rest
