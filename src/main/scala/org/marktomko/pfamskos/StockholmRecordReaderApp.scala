@@ -53,11 +53,17 @@ object StockholmRecordReader {
   // be split further by subsequent regex
   val NON_ALIGNMENT_LINE = """#=(G[FSRC]) ([^\n]+)""".r
 
-  // this splits a line 
+  // this splits a #=GF line into a field and value 
   val GF_ANNOTATION = """([A-Z]{2})[ ]+([^\n]+)""".r
 
+  // this splits a #=GS line into a protein, subfield, and subfield value
   val GS_ANNOTATION = """([A-Z\d-_/]+)[ ]+([A-Z]{2})[ ]*([^\n]+)""".r
 
+  /**
+   * Reads in a Stockholm file, building a representation in main memory.
+   * @param file The name of the Stockholm file to read
+   * @return A list of [[StockholmRecord]]
+   */
   def read(file: String): List[StockholmRecord] = {
     val records = new ListBuffer[StockholmRecord]
 
@@ -65,13 +71,9 @@ object StockholmRecordReader {
     var map: Map[String, ListBuffer[String]] = null
     var memberFamilies: ListBuffer[String] = null
     var memberProteins: ListBuffer[String] = null
-
-    var lineno = 0
     
     val lines = Source.fromFile(file, "UTF-8").getLines
     for (line <- lines) {
-      println("line " + lineno)
-      lineno += 1
       if (line == START) {
         map = new HashMap[String, ListBuffer[String]]
         memberFamilies = new ListBuffer[String]
