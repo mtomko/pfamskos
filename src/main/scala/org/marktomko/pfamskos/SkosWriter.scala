@@ -2,49 +2,39 @@ package org.marktomko.pfamskos
 
 import java.io.OutputStream
 
-import com.ctc.wstx.stax.WstxOutputFactory
+import javax.xml.stream.XMLOutputFactory
+
+import org.codehaus.staxmate.SMOutputFactory
 
 class SkosWriter {
     def write(records: List[StockholmRecord], stream: OutputStream) {
-      val factory = new WstxOutputFactory
-      factory.configureForXmlConformance()
+      val factory = XMLOutputFactory.newInstance()
+      val sw = factory.createXMLStreamWriter(stream, "UTF-8")
       
-      val writer = factory.createXMLStreamWriter(stream, "UTF-8")
-      writer.setPrefix("rdf", "http://www.w3.org/1999/02/22-df-syntax-ns#")
-      writer.setPrefix("rdfs", "http://www.w3.org/2000/01/rdf-schema#")
-      writer.setPrefix("skos", "http://www.w3.org/2004/02/skos/core#")
-      writer.setPrefix("dc", "http://purl.org/dc/terms/")
+      val doc = SMOutputFactory.createOutputDocument(sw, "1.0", "UTF-8", true)
+
+      // Defines linefeed to use, spaces for indentation (from 1, step by 2)
+      doc.setIndentation("\n  ", 1, 2)
+      val rdf = doc.getNamespace("http://www.w3.org/1999/02/22-df-syntax-ns#", "rdf")
+      val rdfs = doc.getNamespace("http://www.w3.org/2000/01/rdf-schema#", "rdfs")
+      val skos = doc.getNamespace("http://www.w3.org/2004/02/skos/core#", "skos")
+      val dc = doc.getNamespace("http://purl.org/dc/terms/", "dc")
       
-      writer.writeStartDocument("UTF-8", "1.0")
+      val root = doc.addElement(rdf, "RDF")
+      root.predeclareNamespace(rdf)
+      root.predeclareNamespace(rdfs)
+      root.predeclareNamespace(skos)
+      root.predeclareNamespace(dc)
       
-      // open RDF
-      writer.writeStartElement("http://www.w3.org/1999/02/22-df-syntax-ns#", "RDF")
-      writer.writeNamespace("rdf", "http://www.w3.org/1999/02/22-df-syntax-ns#")
-      writer.writeNamespace("rdfs", "http://www.w3.org/2000/01/rdf-schema#")
-      writer.writeNamespace("skos", "http://www.w3.org/2004/02/skos/core#")
-      writer.writeNamespace("dc", "http://purl.org/dc/terms/")
+      val cs = root.addElement(skos, "ConceptScheme")
+      cs.addAttribute(rdf, "about", "http://pfam.sanger.uk.ac")
+      cs.addElement(dc, "title").addCharacters("Pfam")
+      cs.addElement(dc, "date").addCharacters("2009-07-09")
+      cs.addElement(dc, "creator").addCharacters("Sanger Institute")
       
-      writer.writeStartElement("http://www.w3.org/2004/02/skos/core#", "ConceptScheme")
-      writer.writeAttribute("http://www.w3.org/1999/02/22-df-syntax-ns#", "about", "http://pfam.sanger.uk.ac")
-      
-      writer.writeStartElement("http://purl.org/dc/terms/", "title")
-      writer.writeCharacters("Pfam")
-      writer.writeEndElement
-      
-      writer.writeStartElement("http://purl.org/dc/terms/", "date")
-      writer.writeCharacters("2009-07-09")
-      writer.writeEndElement
-      
-      writer.writeStartElement("http://purl.org/dc/terms/", "creator")
-      writer.writeCharacters("Sanger Institute")
-      writer.writeEndElement
-      
-      writer.writeEndElement
-      
-      // close RDF
-      writer.writeEndElement
-      writer.writeEndDocument
+      doc.closeRoot
     }
+
 }
 
 object SkosWriter {
