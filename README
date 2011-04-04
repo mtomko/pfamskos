@@ -1,0 +1,16 @@
+PFAM - SKOS
+Author: Mark Tomko <mjt0229@gmail.com>
+Copyright: Simmons College, 2011
+
+The object of this project is to develop a small library of code that can
+read the latest Pfam data set files and produce a working SKOS representation
+of the data. This work is part of a project for a class at the Simmons College
+Graduate School of Library and Information Science.
+
+For more information on Pfam, see: http://pfam.sanger.ac.uk/
+For more information on SKOS, see: http://www.w3.org/2004/02/skos/
+
+For more information about this project, contact the author.
+
+This code is free for non-commercial use as long as it is properly attributed
+to its author.
