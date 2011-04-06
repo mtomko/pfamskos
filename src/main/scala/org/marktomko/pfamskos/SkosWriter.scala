@@ -92,6 +92,12 @@ class SkosWriter(stream: OutputStream) {
   }
 }
 
+/**
+ * This object serves primarily as a test driver for the SkosWriter class. It
+ * should be deleted and replaced with proper unit tests.
+ * 
+ * @author Mark Tomko, (c) 2011
+ */
 object SkosWriter {
   def main(args: Array[String]): Unit = {
     val skosWriter = new SkosWriter(System.out)
