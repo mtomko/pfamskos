@@ -46,7 +46,7 @@ O31699/88-139           EVMLTDIPRLHINDPIMKGFGMVINN..GFVCVENDE
 """
 
   @Test
-  def testOK() {
+  def testReadSingleRecord() {
     val stream = new ByteArrayInputStream(record.getBytes("UTF-8"))
     
     val handler = new ListRecordHandler
