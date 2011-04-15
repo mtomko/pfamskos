@@ -32,7 +32,9 @@ class BDBClanMembershipDatabase(val env: String, val db: String) extends ClanMem
     if (database.get(null, key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS) {
       new String(value.getData, "UTF-8")
     }
-    null
+    else {
+      null
+    }
   }
 
   def close() {

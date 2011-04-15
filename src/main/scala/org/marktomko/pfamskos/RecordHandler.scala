@@ -24,6 +24,8 @@ object RecordHandler {
     if (record.getFields.contains("TP")) {
       record.getValues("TP")(0)
     }
-    "Clan"
+    else {
+      "Clan"
+    }
   }    
 }
