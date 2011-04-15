@@ -15,10 +15,10 @@ import java.io.File
 class BDBClanMembershipDatabase(val env: String, val db: String) extends ClanMembershipDatabase {
   val envConfig = new EnvironmentConfig
   envConfig.setAllowCreate(true);
-  val environment = new Environment(new File(db), envConfig);
+  val environment = new Environment(new File(env), envConfig);
   val dbConfig = new DatabaseConfig
   dbConfig.setAllowCreate(true)
-  val database = environment.openDatabase(null, "clan_membership", dbConfig);
+  val database = environment.openDatabase(null, db, dbConfig);
 
   override def addProtein(protein: String, clan: String) {
     val key = new DatabaseEntry(protein.getBytes("UTF-8"))

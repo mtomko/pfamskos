@@ -59,6 +59,7 @@ O31699/88-139           EVMLTDIPRLHINDPIMKGFGMVINN..GFVCVENDE
     assertEquals("CBS", record0.id)
     assertEquals(List("PF00571"), record0.getValues("AC"))
     assertEquals(List("CBS domains are small intracellular modules mostly found", "in 2 or four copies within a protein."), record0.getValues("CC"))
+    assertEquals(List("O31698", "O83071", "O83071", "O31698"), record0.memberProteins)
   }
 }
 

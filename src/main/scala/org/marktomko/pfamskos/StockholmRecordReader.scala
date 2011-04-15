@@ -55,6 +55,8 @@ object StockholmRecordReader {
 
   // this splits a #=GF line into a field and value 
   val GF_ANNOTATION = """([A-Z]{2})[ ]+([^\n]+)""".r
+  
+  val MB_PROTEIN_FAM = """([A-Z0-9\.]+);""".r
 
   // this splits a #=GS line into a protein, subfield, and subfield value
   val GS_ANNOTATION = """([A-Z\d-_/]+)[ ]+([A-Z]{2})[ ]*([^\n]+)""".r
@@ -71,8 +73,7 @@ object StockholmRecordReader {
     var memberFamilies: ListBuffer[String] = null
     var memberProteins: ListBuffer[String] = null
     
-    val lines = Source.fromInputStream(stream, "UTF-8").getLines
-    for (line <- lines) {
+    for (line <- Source.fromInputStream(stream, "UTF-8").getLines) {
       if (line == START) {
         // we've reached the start of a new record, so initialize a new record
         map = new HashMap[String, ListBuffer[String]]
@@ -91,6 +92,9 @@ object StockholmRecordReader {
             if (field == ID) {
               // ID gets special treatment
               id = value
+            } else if (field == MB) {
+              val MB_PROTEIN_FAM(family) = value
+              memberFamilies += family
             } else {
               // everything else just gets stored
               val values =
