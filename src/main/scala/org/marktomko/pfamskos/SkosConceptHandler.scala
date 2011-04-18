@@ -1,11 +1,13 @@
 package org.marktomko.pfamskos
 
-class SkosConceptHandler(val clanMembershipDB: ClanMembershipDatabase, val clans: scala.collection.mutable.Set[String], val clanless: scala.collection.mutable.Set[String], val skosWriter: SkosWriter) extends RecordHandler {
+import scala.collection.mutable.Set
+
+class SkosConceptHandler(val clanMembershipDB: ClanMembershipDatabase, val clans: Set[String], val clanless: Set[String], val skosWriter: SkosWriter) extends RecordHandler {
   val SCHEME = "http://web.simmons.edu/~tomko/pfam"
   val NULL_CLAN = SCHEME + "/clanless"
   val CLAN = Pfam.PFAM_URL + "/clans/browse"
   val FAMILY = Pfam.PFAM_URL + "/family/browse"
-  val PROTEIN = """([A-Z0-9])+;""".r
+  val PROTEIN = """([A-Z0-9]+)\.[^\n]+""".r
 
   override def apply(record: StockholmRecord) {
     val recordType = RecordHandler.getType(record)
@@ -46,7 +48,10 @@ class SkosConceptHandler(val clanMembershipDB: ClanMembershipDatabase, val clans
 
       val narrower =
         if (recordType == "Family") {
-          record.memberProteins.map(Pfam.UNIPROT_URL + "/" + _)
+          record.memberProteins.map((prot) => { 
+              val PROTEIN(uniprot) = prot
+              Pfam.UNIPROT_URL + "/" + uniprot
+          })
         } else {
           record.memberFamilies.map(Pfam.PFAM_URL + "/family/" + _)
         }

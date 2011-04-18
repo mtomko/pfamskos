@@ -20,7 +20,7 @@ class SkosWriter(stream: OutputStream) {
   // defines linefeed to use, spaces for indentation (from 1, step by 2)
   doc.setIndentation("\n  ", 1, 2)
 
-  val RDF = doc.getNamespace("http://www.w3.org/1999/02/22-df-syntax-ns#", "rdf")
+  val RDF = doc.getNamespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#", "rdf")
   val RDFS = doc.getNamespace("http://www.w3.org/2000/01/rdf-schema#", "rdfs")
   val SKOS = doc.getNamespace("http://www.w3.org/2004/02/skos/core#", "skos")
   val DC = doc.getNamespace("http://purl.org/dc/terms/", "dc")
