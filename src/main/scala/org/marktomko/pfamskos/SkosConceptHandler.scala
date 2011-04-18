@@ -1,7 +1,8 @@
 package org.marktomko.pfamskos
 
-class SkosConceptHandler(val clanMembershipDB: ClanMembershipDatabase, val skosWriter: SkosWriter) extends RecordHandler {
+class SkosConceptHandler(val clanMembershipDB: ClanMembershipDatabase, val clans: scala.collection.mutable.Set[String], val clanless: scala.collection.mutable.Set[String], val skosWriter: SkosWriter) extends RecordHandler {
   val SCHEME = "http://web.simmons.edu/~tomko/pfam"
+  val NULL_CLAN = SCHEME + "/clanless"
   val CLAN = Pfam.PFAM_URL + "/clans/browse"
   val FAMILY = Pfam.PFAM_URL + "/family/browse"
   val PROTEIN = """([A-Z0-9])+;""".r
@@ -31,11 +32,15 @@ class SkosConceptHandler(val clanMembershipDB: ClanMembershipDatabase, val skosW
         if (recordType == "Family") {
           val clan = clanMembershipDB.clanFor(accession)
           if (clan == null) {
-            null
+            clanless += about
+            NULL_CLAN
           }
-          Pfam.PFAM_URL + "/clan/" + clan
+          else {
+            Pfam.PFAM_URL + "/clan/" + clan
+          }
         } else {
           // clans have a single parent
+          clans += about
           CLAN
         }
 

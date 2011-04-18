@@ -57,7 +57,7 @@ class SkosWriter(stream: OutputStream) {
    * @param narrowerTerms
    * @param metadata
    */
-  def writeConcept(about: String, scheme: String, prefLabel: String, altLabels: List[String], broaderTerms: List[String], narrowerTerms: List[String], metadata: Map[Tuple2[SMNamespace, String], String]) {
+  def writeConcept(about: String, scheme: String, prefLabel: String, altLabels: Iterable[String], broaderTerms: Iterable[String], narrowerTerms: Iterable[String], metadata: Map[Tuple2[SMNamespace, String], String]) {
     val conceptElt = writeSimpleElement(root, SKOS, "Concept", Map((RDF, "about") -> about))    
     writeSimpleElement(conceptElt, SKOS, "inScheme", Map((RDF, "resource") -> scheme))
 
