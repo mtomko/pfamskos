@@ -7,7 +7,17 @@ import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 
+/**
+ * This application encodes the logic used to transform the Pfam files into a
+ * SKOS representation.
+ * 
+ * @author Mark Tomko, (c) 2011
+ */
 object PfamSkosApp {
+  /**
+   * The main application entry point; parses arguments and dispatches actions
+   * to the writeSkos() method.
+   */
   def main(args: Array[String]): Unit = {
     if (args.length < 3) {
       println("usage: PfamSkosApp <dbenv> <clanfile> <proteinfile> [outputfile]")
@@ -31,6 +41,7 @@ object PfamSkosApp {
 
       writeSkos(clandb, clans, clanless, clanfile, proteinfile, output)
     } finally {
+      // attempt to close everything
       try {
         try {
           clandb.close
@@ -48,14 +59,16 @@ object PfamSkosApp {
     }
   }
 
-  def writeSkos(clandb: ClanMembershipDatabase, clans: Set[String], clanless: Set[String], clanfile: InputStream, proteinfile: InputStream, output: OutputStream): Unit = {
+  /**
+   * Writes the SKOS representation using the provided input streams.
+   */
+  private def writeSkos(clandb: ClanMembershipDatabase, clans: Set[String], clanless: Set[String], clanfile: InputStream, proteinfile: InputStream, output: OutputStream): Unit = {
     val skosWriter = new SkosWriter(output)
 
     skosWriter.writeConceptScheme(Pfam.PFAM_URL, PfamSkos.TOP_CONCEPTS,
-      Map(
-        (skosWriter.DC, "title") -> "Pfam",
-        (skosWriter.DC, "date") -> "2009-07-09",
-        (skosWriter.DC, "creator") -> "Sanger Institute"))
+      Map((skosWriter.DC, "title") -> "Pfam",
+          (skosWriter.DC, "date") -> "2009-07-09",
+          (skosWriter.DC, "creator") -> "Sanger Institute"))
 
     val recordHandler = new CompositeRecordHandler(List(new ProteinClanDatabaseHandler(clandb), new SkosConceptHandler(clandb, clans, clanless, skosWriter)))
     
