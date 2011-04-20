@@ -61,6 +61,8 @@ object StockholmRecordReader {
   // this splits a #=GS line into a protein, subfield, and subfield value
   val GS_ANNOTATION = """([A-Z\d-_/]+)[ ]+([A-Z]{2})[ ]*([^\n]+)""".r
 
+  val nullCharTransform = new SubstitutionStringTransform(new String(Array(0.toChar)), "")
+  
   /**
    * Reads in a Stockholm file, building a representation in main memory.
    * @param file The name of the Stockholm file to read
@@ -100,7 +102,9 @@ object StockholmRecordReader {
               val values =
                 if (map.contains(field)) map(field)
                 else new ListBuffer[String]
-              values += value
+              
+              // sanitize the input - this might need to be expanded a bit
+              if (value != null) values += nullCharTransform(value)
               map += (field -> values)
             }
           case GS =>

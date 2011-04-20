@@ -1,6 +1,9 @@
 package org.marktomko.pfamskos
 
+import scala.collection.mutable.HashMap
 import scala.collection.mutable.Set
+
+import org.codehaus.staxmate.out.SMNamespace
 
 /**
  * This class handles each Stockholm Record and produces a SKOS concept. It
@@ -26,10 +29,18 @@ class SkosConceptHandler(val clanMembershipDB: ClanMembershipDatabase, val clans
       val ac = RecordHandler.getRawAccession(record)
       val accession = RecordHandler.getAccession(record)
 
-      // joins successive values with a single space
-      val de = record.getValues("DE").reduceLeft(_ + " " + _)
-      val metadata = Map((skosWriter.SKOS, "externalId") -> ac,
-                         (skosWriter.SKOS, "definition") -> de)
+      val metadata = new HashMap[Tuple2[SMNamespace, String], String]
+      metadata += (skosWriter.SKOS, "externalId") -> ac
+      
+      val de = getMultiLineField(record, "DE")
+      if (de != null) {
+        metadata += (skosWriter.SKOS, "definition") -> de
+      }
+      
+      val cc = getMultiLineField(record, "CC") 
+      if (cc != null) {
+        metadata += (skosWriter.SKOS, "note") -> cc
+      }
 
       val typeURL =
         if (recordType == "Family") {
@@ -72,7 +83,16 @@ class SkosConceptHandler(val clanMembershipDB: ClanMembershipDatabase, val clans
           record.memberFamilies.map(Pfam.PFAM_URL + "/family/" + _)
         }
 
-      skosWriter.writeConcept(about, SCHEME, preferred, alternate, List(broader), narrower, metadata)
+      skosWriter.writeConcept(about, SCHEME, preferred, alternate, List(broader), narrower, metadata.toMap)
+    }
+    
+    def getMultiLineField(record: StockholmRecord, field: String): String = {
+      if (record.getFields.contains(field)) {
+        // joins successive values with a single space
+        record.getValues(field).reduceLeft(_ + " " + _)
+      } else {
+        null
+      }
     }
   }
 }

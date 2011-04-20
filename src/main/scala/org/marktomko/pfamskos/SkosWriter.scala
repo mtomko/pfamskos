@@ -76,6 +76,8 @@ class SkosWriter(stream: OutputStream) {
     for(term <- broaderTerms) {
       writeSimpleElement(conceptElt, SKOS, "broader", Map((RDF, "resource") -> term))
     }
+    
+    metadata foreach ((md) => conceptElt.addElement(md._1._1, md._1._2).addCharacters(md._2))
   }
 
   /**
