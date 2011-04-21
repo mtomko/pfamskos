@@ -12,9 +12,7 @@ import org.codehaus.staxmate.out.SMNamespace
  * 
  * @author Mark Tomko, (c) 2011
  */
-class SkosConceptHandler(val clanMembershipDB: ClanMembershipDatabase, val clans: Set[String], val clanless: Set[String], val skosWriter: SkosWriter) extends RecordHandler {
-  val SCHEME = "http://web.simmons.edu/~tomko/pfam"
-  val NULL_CLAN = SCHEME + "/clanless"
+class SkosConceptHandler(val clanMembershipDB: ClanMembershipDatabase, val skosWriter: SkosWriter) extends RecordHandler {
   val CLAN = Pfam.PFAM_URL + "/clans/browse"
   val FAMILY = Pfam.PFAM_URL + "/family/browse"
   val PROTEIN = """([A-Z0-9]+)\.[^\n]+""".r
@@ -62,16 +60,12 @@ class SkosConceptHandler(val clanMembershipDB: ClanMembershipDatabase, val clans
         if (recordType == "Family") {
           val clan = clanMembershipDB.clanFor(accession)
           if (clan == null) {
-            clanless += about
-            //List(NULL_CLAN) ~~commented out to disable top concept
             List()
           } else {
             List(Pfam.PFAM_URL + "/clan/" + clan)
           }
         } else {
           // clans have a single parent
-          clans += about
-          //List(CLAN) ~~commented out to disable top concept
           List()
         }
 
