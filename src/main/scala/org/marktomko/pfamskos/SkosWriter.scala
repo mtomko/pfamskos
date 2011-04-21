@@ -93,22 +93,3 @@ class SkosWriter(stream: OutputStream) {
     elt
   }
 }
-
-/**
- * This object serves primarily as a test driver for the SkosWriter class. It
- * should be deleted and replaced with proper unit tests.
- * 
- * @author Mark Tomko, (c) 2011
- */
-object SkosWriter {
-  def main(args: Array[String]): Unit = {
-    val skosWriter = new SkosWriter(System.out)
-    skosWriter.writeConceptScheme("http//pfam.sanger.uk.ac",
-                                  List("http://pfam.sanger.ac.uk/clan/browse", "http://pfam.sanger.ac.uk/family/browse"),
-                                  Map((skosWriter.DC, "title") -> "Pfam",
-                                      (skosWriter.DC, "date") -> "2009-07-09",
-                                      (skosWriter.DC, "creator") -> "Sanger Institute"))
-    skosWriter.writeConcept("http://pfam.sanger.ac.uk/clan/browse", "http://pfam.sanger.ac.uk", "Pfam Clan", List(), List(), List("http://pfam.sanger.ac.uk/clan/CL0023"), Map())
-    skosWriter.close
-  }
-}

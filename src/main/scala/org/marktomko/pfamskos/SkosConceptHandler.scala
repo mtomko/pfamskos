@@ -32,12 +32,12 @@ class SkosConceptHandler(val clanMembershipDB: ClanMembershipDatabase, val skosW
       
       val de = getMultiLineField(record, "DE")
       if (de != null) {
-        metadata += (skosWriter.SKOS, "definition") -> de
+        metadata += (skosWriter.SKOS, "scopeNote") -> de
       }
       
       val cc = getMultiLineField(record, "CC") 
       if (cc != null) {
-        metadata += (skosWriter.SKOS, "note") -> cc
+        metadata += (skosWriter.SKOS, "definition") -> cc
       }
 
       val typeURL =
