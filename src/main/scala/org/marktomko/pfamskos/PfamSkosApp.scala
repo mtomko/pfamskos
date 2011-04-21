@@ -65,7 +65,9 @@ object PfamSkosApp {
   private def writeSkos(clandb: ClanMembershipDatabase, clans: Set[String], clanless: Set[String], clanfile: InputStream, proteinfile: InputStream, output: OutputStream): Unit = {
     val skosWriter = new SkosWriter(output)
 
-    skosWriter.writeConceptScheme(Pfam.PFAM_URL, PfamSkos.TOP_CONCEPTS,
+    //skosWriter.writeConceptScheme(Pfam.PFAM_URL, PfamSkos.TOP_CONCEPTS,
+    skosWriter.writeConceptScheme(Pfam.PFAM_URL, List(),
+    //skosWriter.writeConceptScheme("http://web.simmons.edu/~tomko/pfam", List(),
       Map((skosWriter.DC, "title") -> "Pfam",
           (skosWriter.DC, "date") -> "2009-07-09",
           (skosWriter.DC, "creator") -> "Sanger Institute"))
@@ -77,13 +79,13 @@ object PfamSkosApp {
     
     // write the top-level concept for clans
     val clanURL = Pfam.PFAM_URL + "/clans/browse"
-    skosWriter.writeConcept(clanURL, Pfam.PFAM_URL, "Clan", List(), List(), clans, Map())
+    //skosWriter.writeConcept(clanURL, Pfam.PFAM_URL, "Clan", List(), List(), clans, Map()) 
     
     // process the protein families file
     StockholmRecordReader.read(proteinfile, recordHandler)
     
     // write the clanless "superclan"
-    skosWriter.writeConcept(PfamSkos.NULL_CLAN, Pfam.PFAM_URL, "Clanless", List(), List(clanURL), clanless, Map())
+    //skosWriter.writeConcept(PfamSkos.NULL_CLAN, Pfam.PFAM_URL, "Clanless", List(), List(), clanless, Map())
 
     skosWriter.close()
   }

@@ -23,7 +23,7 @@ class SkosConceptHandler(val clanMembershipDB: ClanMembershipDatabase, val clans
 
   override def apply(record: StockholmRecord) {
     val recordType = RecordHandler.getType(record)
-    if (recordType == "Domain") {
+    if (recordType == "Domain" || recordType == "Repeat" || recordType == "Motif") {
       // skip this record
     } else {
       val ac = RecordHandler.getRawAccession(record)
@@ -49,6 +49,7 @@ class SkosConceptHandler(val clanMembershipDB: ClanMembershipDatabase, val clans
           "/clan/"
         }
       val about = Pfam.PFAM_URL + typeURL + accession
+      //val about = SCHEME + "#" + accession
 
       val preferred = labelTransform(record.id)
       val alternate =
@@ -63,14 +64,17 @@ class SkosConceptHandler(val clanMembershipDB: ClanMembershipDatabase, val clans
           val clan = clanMembershipDB.clanFor(accession)
           if (clan == null) {
             clanless += about
-            NULL_CLAN
+            //List(NULL_CLAN) ~~commented out to disable top concept
+            List()
           } else {
-            Pfam.PFAM_URL + "/clan/" + clan
+            List(Pfam.PFAM_URL + "/clan/" + clan)
+            //List(SCHEME+"#"+clan)
           }
         } else {
           // clans have a single parent
           clans += about
-          CLAN
+          //List(CLAN) ~~commented out to disable top concept
+          List()
         }
 
       val narrower =
@@ -79,11 +83,14 @@ class SkosConceptHandler(val clanMembershipDB: ClanMembershipDatabase, val clans
             val PROTEIN(uniprot) = prot
             Pfam.UNIPROT_URL + "/" + uniprot
           })
+          //List()
         } else {
           record.memberFamilies.map(Pfam.PFAM_URL + "/family/" + _)
+          //record.memberFamilies.map(SCHEME + "#" + _)
         }
 
-      skosWriter.writeConcept(about, SCHEME, preferred, alternate, List(broader), narrower, metadata.toMap)
+      //skosWriter.writeConcept(about, SCHEME, preferred, alternate, broader, narrower, metadata.toMap)
+      skosWriter.writeConcept(about, Pfam.PFAM_URL, preferred, alternate, broader, narrower, metadata.toMap)
     }
     
     def getMultiLineField(record: StockholmRecord, field: String): String = {
