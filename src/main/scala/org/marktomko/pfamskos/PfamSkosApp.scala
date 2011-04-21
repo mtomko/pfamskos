@@ -20,7 +20,7 @@ object PfamSkosApp {
    */
   def main(args: Array[String]): Unit = {
     if (args.length < 3) {
-      println("usage: PfamSkosApp <dbenv> <clanfile> <proteinfile> [outputfile]")
+      println("usage: PfamSkosApp <dbenv> <clanfile> <proteinfile> <uniprotfile> [outputfile]")
       exit(0)
     }
 
@@ -29,18 +29,20 @@ object PfamSkosApp {
     val familyMemberDB = new BDBMembershipDatabase(dbenv, "family_membership")
     val familydb = new BDBSet(dbenv, "families")
     val proteindb = new BDBSet(dbenv, "proteins")
+    val uniprotdb = new BDBMap(dbenv, "uniprot")
     try {
       val clanfile = new FileInputStream(args(1))
       val proteinfile = new FileInputStream(args(2))
+      val uniprotfile = new java.util.zip.GZIPInputStream(new FileInputStream(args(3)))
 
       val output =
-        if (args.length > 3) {
-          new FileOutputStream(args(3))
+        if (args.length > 4) {
+          new FileOutputStream(args(4))
         } else {
           System.out
         }
 
-      writeSkos(clanMemberDB, familydb, familyMemberDB, proteindb, clanfile, proteinfile, output)
+      writeSkos(clanMemberDB, familydb, familyMemberDB, proteindb, uniprotdb, clanfile, proteinfile, uniprotfile, output)
     } finally {
       // attempt to close everything
       try {
@@ -55,7 +57,11 @@ object PfamSkosApp {
             try {
               familyMemberDB.close
             } finally {
-            dbenv.close
+              try {
+                uniprotdb.close
+              } finally {
+                dbenv.close
+              }
             }
           }
         }
@@ -66,7 +72,7 @@ object PfamSkosApp {
   /**
    * Writes the SKOS representation using the provided input streams.
    */
-  private def writeSkos(clanMemberDB: MembershipDatabase, familydb: Set[String], familyMemberDB: MembershipDatabase, proteindb: Set[String], clanfile: InputStream, proteinfile: InputStream, output: OutputStream): Unit = {
+  private def writeSkos(clanMemberDB: MembershipDatabase, familydb: Set[String], familyMemberDB: MembershipDatabase, proteindb: Set[String], uniprotdb: scala.collection.mutable.Map[String, String], clanfile: InputStream, proteinfile: InputStream, uniprotfile: InputStream, output: OutputStream): Unit = {
     val skosWriter = new SkosWriter(output)
 
     skosWriter.writeConceptScheme(Pfam.PFAM_URL, List(),
@@ -81,6 +87,10 @@ object PfamSkosApp {
     
     // process the protein families file
     StockholmRecordReader.read(proteinfile, recordHandler)
+    
+    // process the uniprot file
+    val uniprotHandler = new UniprotNameHandler(uniprotdb)
+    UniprotReader.read(uniprotfile, uniprotHandler)
     
     // now write dummy records for all remaining families
     for(family <- familydb) {
@@ -102,7 +112,10 @@ object PfamSkosApp {
         } else {
           List(Pfam.getFamilyUrl(family))
         }
-      skosWriter.writeConcept(Pfam.getProteinUrl(protein), Pfam.PFAM_URL, "Unknown Protein "+protein, List(), broader, List(), Map())
+
+      val prefLabel = uniprotdb.get(protein).getOrElse("Unknown Protein " + protein)
+
+      skosWriter.writeConcept(Pfam.getProteinUrl(protein), Pfam.PFAM_URL, prefLabel, List(), broader, List(), Map())
     }
     skosWriter.close()
   }

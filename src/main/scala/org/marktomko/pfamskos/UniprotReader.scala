@@ -1,5 +1,6 @@
 package org.marktomko.pfamskos
 
+import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.Map
 import scala.io.Source
 
@@ -11,23 +12,28 @@ import java.io.InputStream
  * @author Mark Tomko, (c) 2011
  */
 object UniprotReader {
-  val START = """%ID[^\n]+""".r
-  val ACCESSION = """^AC[ ]+([A-Z0-9]+);"""r
-  val NAME = """^DE[ ]+RecName: Full= ([A-Za-z0-9\/-]+);$""".r
-  val END = """^//$""".r
+  val START = """ID""".r
+  val ACCESSION_LINE = """^AC[ ]+([^\n]+)"""r
+  //val NAME = """^DE[ ]+RecName: Full=([A-Za-z0-9\/\- \.\(\)\*,'\\]+);$""".r
+  val NAME = """^DE[ ]+RecName: Full=(.+);$""".r
+  val END = """//""".r
   
   def read(stream: InputStream, handler: UniprotRecordHandler) {
-    var accession = ""
+    var accessions = ListBuffer[String]()
     var name = ""
     for (line <- Source.fromInputStream(stream, "UTF-8").getLines) {
-      if (line == START) {
-        accession = ""
+      if (line startsWith "ID") {
+        accessions = ListBuffer[String]()
         name = ""
-      } else if (line == END) {
-        handler(accession, name)
+      } else if (line startsWith "//") {
+        for(accession <- accessions) {
+          handler(accession, name)
+        }
       } else if (line startsWith "AC") {
-        val ACCESSION(acc) = line
-        accession = acc
+        val ACCESSION_LINE(accessionList) = line
+        for (accession <- accessionList.split(";")) {
+          accessions += accession.replace(" ", "")
+        }
       } else if (line startsWith "DE   RecName:") {
         val NAME(n) = line
         name = n
