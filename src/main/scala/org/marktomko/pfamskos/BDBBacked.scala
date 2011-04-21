@@ -5,29 +5,52 @@ import com.sleepycat.je.DatabaseEntry
 import com.sleepycat.je.LockMode
 import com.sleepycat.je.OperationStatus
 
-abstract class BDBBacked(val env: BDBEnvironment, val db: String) {
+/**
+ * This abstract class may be used as a starting point for implementing any
+ * BDB-backed store.
+ * 
+ * @author Mark Tomko, (c) 2011
+ */
+abstract class BDBBacked[K, V >: Null <: AnyRef](val env: BDBEnvironment, val db: String, val keyFactory: DatabaseEntryFactory[K], val valueFactory: DatabaseEntryFactory[V]) {
   val config = new DatabaseConfig
   config.setAllowCreate(true)
-  val database = env.getDB(db, config)
+  val database = env.getDatabase(db, config)
 
-  def add(key: DatabaseEntry, value: DatabaseEntry) {
-    database.put(null, key, value)
+  /**
+   * Adds the key/value pair to the database
+   * @param key
+   * @param value
+   * @return Unit
+   */
+  def add(key: K, value: V) {
+    database.put(null, keyFactory.toEntry(key), valueFactory.toEntry(value))
   }
   
-  def remove(key: DatabaseEntry) {
-    database.delete(null, key) 
+  /**
+   * Removes the value corresponding to the key from the database
+   * @param key
+   * @return Unit
+   */
+  def remove(key: K) {
+    database.delete(null, keyFactory.toEntry(key)) 
   }
   
-  def get(key: DatabaseEntry): Array[Byte] = {
+  /**
+   * Retrieves the value corresponding to the given key
+   */
+  def get(key: K): V = {
     val value = new DatabaseEntry
-    if (database.get(null, key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS) {
-      value.getData
+    if (database.get(null, keyFactory.toEntry(key), value, LockMode.DEFAULT) == OperationStatus.SUCCESS) {
+      valueFactory.toValue(value)
     }
     else {
       null
     }
   }
   
+  /**
+   * Closes the database and frees any allocated resources
+   */
   def close() {
     database.close
   }
