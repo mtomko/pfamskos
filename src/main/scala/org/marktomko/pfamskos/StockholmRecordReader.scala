@@ -58,6 +58,8 @@ object StockholmRecordReader {
   
   val MB_PROTEIN_FAM = """([A-Z0-9\.]+);""".r
 
+  val UNIPROT_PROTEIN_AC = """([A-Z0-9]+)\.[^\n]+""".r
+
   // this splits a #=GS line into a protein, subfield, and subfield value
   val GS_ANNOTATION = """([A-Z\d-_/]+)[ ]+([A-Z]{2})[ ]*([^\n]+)""".r
 
@@ -68,7 +70,7 @@ object StockholmRecordReader {
    * @param file The name of the Stockholm file to read
    * @return A list of [[StockholmRecord]]
    */
-  def read(stream: InputStream, handler: RecordHandler) {
+  def read(stream: InputStream, handler: StockholmRecordHandler) {
     // these comprise mutable state representing a record that's being read
     var id: String = null
     var map: Map[String, ListBuffer[String]] = null
@@ -112,7 +114,8 @@ object StockholmRecordReader {
             // protein family - store the UniProtKB accession numbers
             val GS_ANNOTATION(protein, field, value) = rest
             if (field == AC) {
-              memberProteins += value
+              val UNIPROT_PROTEIN_AC(proteinAccession) = value
+              memberProteins += proteinAccession
             }
           case _ =>
             // GR and GC lines don't have information that we care about

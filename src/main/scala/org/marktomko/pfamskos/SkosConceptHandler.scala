@@ -12,42 +12,43 @@ import org.codehaus.staxmate.out.SMNamespace
  * 
  * @author Mark Tomko, (c) 2011
  */
-class SkosConceptHandler(val clanMembershipDB: ClanMembershipDatabase, val skosWriter: SkosWriter) extends RecordHandler {
-  val CLAN = Pfam.PFAM_URL + "/clans/browse"
-  val FAMILY = Pfam.PFAM_URL + "/family/browse"
-  val PROTEIN = """([A-Z0-9]+)\.[^\n]+""".r
-
+class SkosConceptHandler(val clanMembershipDB: MembershipDatabase, val familydb: Set[String], val skosWriter: SkosWriter) extends StockholmRecordHandler {
   val labelTransform = new SubstitutionStringTransform("_", " ")
 
   override def apply(record: StockholmRecord) {
-    val recordType = RecordHandler.getType(record)
+    val recordType = StockholmRecordHandler.getType(record)
     if (recordType == "Domain" || recordType == "Repeat" || recordType == "Motif") {
       // skip this record
     } else {
-      val ac = RecordHandler.getRawAccession(record)
-      val accession = RecordHandler.getAccession(record)
-
+      // build a map of general metadata
       val metadata = new HashMap[Tuple2[SMNamespace, String], String]
+      
+      // get the record's accession - we'll use this in URLs
+      val ac = StockholmRecordHandler.getRawAccession(record)
+      val accession = StockholmRecordHandler.getAccession(record)
+
+      // put the raw accession information into the map as externalId
       metadata += (skosWriter.SKOS, "externalId") -> ac
       
+      // translate the definition to the scope note
       val de = getMultiLineField(record, "DE")
       if (de != null) {
         metadata += (skosWriter.SKOS, "scopeNote") -> de
       }
       
+      // translate the comments to the definition
       val cc = getMultiLineField(record, "CC") 
       if (cc != null) {
         metadata += (skosWriter.SKOS, "definition") -> cc
       }
 
-      val typeURL =
+      val about = 
         if (recordType == "Family") {
-          "/family/"
+          Pfam.getFamilyUrl(accession)
         } else {
-          "/clan/"
+          Pfam.getClanUrl(accession)
         }
-      val about = Pfam.PFAM_URL + typeURL + accession
-
+ 
       val preferred = labelTransform(record.id)
       val alternate =
         if (record.id == preferred) {
@@ -58,11 +59,11 @@ class SkosConceptHandler(val clanMembershipDB: ClanMembershipDatabase, val skosW
 
       val broader =
         if (recordType == "Family") {
-          val clan = clanMembershipDB.clanFor(accession)
+          val clan = clanMembershipDB.groupFor(accession)
           if (clan == null) {
             List()
           } else {
-            List(Pfam.PFAM_URL + "/clan/" + clan)
+            List(Pfam.getClanUrl(clan))
           }
         } else {
           // clans have a single parent
@@ -71,13 +72,18 @@ class SkosConceptHandler(val clanMembershipDB: ClanMembershipDatabase, val skosW
 
       val narrower =
         if (recordType == "Family") {
-          record.memberProteins.map((prot) => {
-            val PROTEIN(uniprot) = prot
-            Pfam.UNIPROT_URL + "/" + uniprot
+          record.memberProteins.map((protein) => {
+            Pfam.UNIPROT_URL + "/" + protein
           })
+          //List() // temporarily ignore all proteins!
         } else {
-          record.memberFamilies.map(Pfam.PFAM_URL + "/family/" + _)
+          record.memberFamilies.map(Pfam.getFamilyUrl(_))
         }
+      
+      // housekeeping - if we're about to write a family, remove it from the family db
+      if (recordType == "Family") {
+        familydb -= accession
+      }
 
       skosWriter.writeConcept(about, Pfam.PFAM_URL, preferred, alternate, broader, narrower, metadata.toMap)
     }

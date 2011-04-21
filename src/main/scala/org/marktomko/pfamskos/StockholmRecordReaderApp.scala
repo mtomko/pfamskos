@@ -2,7 +2,7 @@ package org.marktomko.pfamskos
 
 import java.io.FileInputStream
 
-class PrintIdHandler extends RecordHandler {
+class PrintIdHandler extends StockholmRecordHandler {
   override def apply(record: StockholmRecord) {
     println(record.id)
   }

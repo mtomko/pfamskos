@@ -22,7 +22,7 @@ abstract class BDBBacked[K, V >: Null <: AnyRef](val env: BDBEnvironment, val db
    * @param value
    * @return Unit
    */
-  def add(key: K, value: V) {
+  def insert(key: K, value: V) {
     database.put(null, keyFactory.toEntry(key), valueFactory.toEntry(value))
   }
   
@@ -31,20 +31,20 @@ abstract class BDBBacked[K, V >: Null <: AnyRef](val env: BDBEnvironment, val db
    * @param key
    * @return Unit
    */
-  def remove(key: K) {
+  def delete(key: K) {
     database.delete(null, keyFactory.toEntry(key)) 
   }
   
   /**
    * Retrieves the value corresponding to the given key
    */
-  def get(key: K): V = {
+  def get(key: K): Option[V] = {
     val value = new DatabaseEntry
     if (database.get(null, keyFactory.toEntry(key), value, LockMode.DEFAULT) == OperationStatus.SUCCESS) {
-      valueFactory.toValue(value)
+      new Some(valueFactory.toValue(value))
     }
     else {
-      null
+      None
     }
   }
   

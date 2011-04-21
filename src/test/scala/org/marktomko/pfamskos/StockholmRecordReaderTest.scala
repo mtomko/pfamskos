@@ -7,7 +7,7 @@ import org.junit.Assert.assertEquals
 
 import java.io.ByteArrayInputStream
 
-class ListRecordHandler extends RecordHandler {
+class ListRecordHandler extends StockholmRecordHandler {
   val records = new ListBuffer[StockholmRecord]
   override def apply(record: StockholmRecord) {
     records += record
