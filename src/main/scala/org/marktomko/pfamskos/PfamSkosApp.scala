@@ -67,7 +67,6 @@ object PfamSkosApp {
 
     //skosWriter.writeConceptScheme(Pfam.PFAM_URL, PfamSkos.TOP_CONCEPTS,
     skosWriter.writeConceptScheme(Pfam.PFAM_URL, List(),
-    //skosWriter.writeConceptScheme("http://web.simmons.edu/~tomko/pfam", List(),
       Map((skosWriter.DC, "title") -> "Pfam",
           (skosWriter.DC, "date") -> "2009-07-09",
           (skosWriter.DC, "creator") -> "Sanger Institute"))
