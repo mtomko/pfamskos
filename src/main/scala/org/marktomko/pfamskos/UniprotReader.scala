@@ -1,7 +1,6 @@
 package org.marktomko.pfamskos
 
 import scala.collection.mutable.ListBuffer
-import scala.collection.mutable.Map
 import scala.io.Source
 
 import java.io.InputStream
@@ -14,7 +13,6 @@ import java.io.InputStream
 object UniprotReader {
   val START = """ID""".r
   val ACCESSION_LINE = """^AC[ ]+([^\n]+)"""r
-  //val NAME = """^DE[ ]+RecName: Full=([A-Za-z0-9\/\- \.\(\)\*,'\\]+);$""".r
   val NAME = """^DE[ ]+RecName: Full=(.+);$""".r
   val END = """//""".r
   

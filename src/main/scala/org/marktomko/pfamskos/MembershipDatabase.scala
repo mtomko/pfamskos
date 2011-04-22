@@ -17,3 +17,15 @@ trait MembershipDatabase {
    */
   def groupFor(member: String): String
 }
+
+trait MultiMembershipDatabase {
+  /**
+   * Stores the group associated with a given member
+   */
+  def addMember(member: String, group: String): Unit
+  /**
+   * Retrieves the group associated with a given member; returns null
+   * if no group is found.
+   */
+  def groupsFor(member: String): Set[String]
+}

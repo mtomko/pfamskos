@@ -2,7 +2,7 @@ package org.marktomko.pfamskos
 
 import scala.collection.mutable.Set
 
-class ProteinDatabaseHandler(val clanMembershipDB: MembershipDatabase, val familydb: Set[String], val familyMembershipDB: MembershipDatabase, val proteindb: Set[String]) extends StockholmRecordHandler {
+class ProteinDatabaseHandler(val clanMembershipDB: MembershipDatabase, val familydb: Set[String], val familyMembershipDB: MultiMembershipDatabase, val proteindb: Set[String]) extends StockholmRecordHandler {
   override def apply(record: StockholmRecord): Unit = {
     // if the record is a protein clan, store its member families in the database
     StockholmRecordHandler.getType(record) match {

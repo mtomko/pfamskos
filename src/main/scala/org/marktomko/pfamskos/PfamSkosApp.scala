@@ -26,7 +26,7 @@ object PfamSkosApp {
 
     val dbenv = new BDBEnvironment(args(0))
     val clanMemberDB = new BDBMembershipDatabase(dbenv, "clan_membership")
-    val familyMemberDB = new BDBMembershipDatabase(dbenv, "family_membership")
+    val familyMemberDB = new BDBMultiMembershipDatabase(dbenv, "family_membership")
     val familydb = new BDBSet(dbenv, "families")
     val proteindb = new BDBSet(dbenv, "proteins")
     val uniprotdb = new BDBMap(dbenv, "uniprot")
@@ -72,7 +72,7 @@ object PfamSkosApp {
   /**
    * Writes the SKOS representation using the provided input streams.
    */
-  private def writeSkos(clanMemberDB: MembershipDatabase, familydb: Set[String], familyMemberDB: MembershipDatabase, proteindb: Set[String], uniprotdb: scala.collection.mutable.Map[String, String], clanfile: InputStream, proteinfile: InputStream, uniprotfile: InputStream, output: OutputStream): Unit = {
+  private def writeSkos(clanMemberDB: MembershipDatabase, familydb: Set[String], familyMemberDB: MultiMembershipDatabase, proteindb: Set[String], uniprotdb: scala.collection.mutable.Map[String, String], clanfile: InputStream, proteinfile: InputStream, uniprotfile: InputStream, output: OutputStream): Unit = {
     val skosWriter = new SkosWriter(output)
 
     skosWriter.writeConceptScheme(Pfam.PFAM_URL, List(),
@@ -105,12 +105,12 @@ object PfamSkosApp {
     }
 
     for(protein <- proteindb) {
-      val family = familyMemberDB.groupFor(protein)
-      val broader = 
-        if (family == null) {
+      val families = familyMemberDB.groupsFor(protein)
+      val broader: Iterable[String] = 
+        if (families == null) {
           List()
         } else {
-          List(Pfam.getFamilyUrl(family))
+          families.map(Pfam.getFamilyUrl(_))
         }
 
       val prefLabel = uniprotdb.get(protein).getOrElse("Unknown Protein " + protein)

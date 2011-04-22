@@ -14,7 +14,6 @@ class ListRecordHandler extends StockholmRecordHandler {
   }
 }
 
-@Test
 class StockholmRecordReaderTest {
   val record = """
 # STOCKHOLM 1.0
