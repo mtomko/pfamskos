@@ -1,4 +1,4 @@
-package org.marktomko.pfamskos
+package org.marktomko.pfamskos.uniprot
 
 trait UniprotRecordHandler {
   /**

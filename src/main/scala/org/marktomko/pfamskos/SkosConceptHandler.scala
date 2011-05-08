@@ -1,5 +1,8 @@
 package org.marktomko.pfamskos
 
+import org.marktomko.pfamskos.stockholm.StockholmRecord
+import org.marktomko.pfamskos.stockholm.StockholmRecordHandler
+
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.Set
 

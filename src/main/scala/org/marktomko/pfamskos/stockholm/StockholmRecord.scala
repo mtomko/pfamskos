@@ -1,4 +1,4 @@
-package org.marktomko.pfamskos
+package org.marktomko.pfamskos.stockholm
 
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.Map

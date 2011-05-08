@@ -1,4 +1,4 @@
-package org.marktomko.pfamskos
+package org.marktomko.pfamskos.uniprot
 
 import scala.collection.mutable.ListBuffer
 import scala.io.Source

@@ -1,4 +1,6 @@
-package org.marktomko.pfamskos
+package org.marktomko.pfamskos.stockholm
+
+import org.marktomko.pfamskos.SubstitutionStringTransform
 
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
