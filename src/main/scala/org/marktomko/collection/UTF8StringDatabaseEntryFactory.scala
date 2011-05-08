@@ -1,14 +1,6 @@
-package org.marktomko.pfamskos
+package org.marktomko.collection
 
 import com.sleepycat.je.DatabaseEntry
-
-/**
- * Factory trait for converting types to and from DatabaseEntry
- */
-trait DatabaseEntryFactory[A] {
-    def toEntry(value: A): DatabaseEntry
-    def toValue(entry: DatabaseEntry): A
-}
 
 /**
  * Converts UTF-8 Strings to and from DatabaseEntry instances

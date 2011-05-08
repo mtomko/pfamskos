@@ -1,4 +1,6 @@
-package org.marktomko.pfamskos
+package org.marktomko.collection
+
+import org.marktomko.util.Closeable
 
 import java.io.File
 
@@ -13,7 +15,7 @@ import com.sleepycat.je.EnvironmentConfig
  * 
  * @author Mark Tomko, (c) 2011
  */
-class BDBEnvironment(val env: String) {
+class BDBEnvironment(val env: String) extends Closeable {
   val envConfig = new EnvironmentConfig
   envConfig.setAllowCreate(true);
   val environment = new Environment(new File(env), envConfig);
@@ -26,7 +28,7 @@ class BDBEnvironment(val env: String) {
   /**
    * Closes the environment, releasing any allocated resources
    */
-  def close() {
+  override def close() {
     environment.close()
   }
 }

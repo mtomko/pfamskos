@@ -1,5 +1,12 @@
 package org.marktomko.pfamskos
 
+import org.marktomko.collection.BDBEnvironment
+import org.marktomko.collection.BDBMap
+import org.marktomko.collection.BDBSet
+
+import org.marktomko.util.Closeable
+import org.marktomko.util.Closer
+
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -31,9 +38,9 @@ object PfamSkosApp {
     val proteindb = new BDBSet(dbenv, "proteins")
     val uniprotdb = new BDBMap(dbenv, "uniprot")
     try {
-      val clanfile = new FileInputStream(args(1))
-      val proteinfile = new FileInputStream(args(2))
-      val uniprotfile = new java.util.zip.GZIPInputStream(new FileInputStream(args(3)))
+      val clanfile = inputStreamFor(args(1))
+      val proteinfile = inputStreamFor(args(2))
+      val uniprotfile = inputStreamFor(args(3))
 
       val output =
         if (args.length > 4) {
@@ -45,27 +52,7 @@ object PfamSkosApp {
       writeSkos(clanMemberDB, familydb, familyMemberDB, proteindb, uniprotdb, clanfile, proteinfile, uniprotfile, output)
     } finally {
       // attempt to close everything
-      try {
-        clanMemberDB.close
-      } finally {
-        try {
-          familydb.close
-        } finally {
-          try {
-            proteindb.close
-          } finally {
-            try {
-              familyMemberDB.close
-            } finally {
-              try {
-                uniprotdb.close
-              } finally {
-                dbenv.close
-              }
-            }
-          }
-        }
-      }
+      Closer.tryClose(List(clanMemberDB, familydb, proteindb, familyMemberDB, uniprotdb, dbenv))
     }
   }
 
@@ -118,5 +105,13 @@ object PfamSkosApp {
       skosWriter.writeConcept(Pfam.getProteinUrl(protein), Pfam.PFAM_URL, prefLabel, List(), broader, List(), Map())
     }
     skosWriter.close()
+  }
+  
+  private def inputStreamFor(filename: String): InputStream = {
+    if (filename.toLowerCase endsWith ".gz") {
+      new java.util.zip.GZIPInputStream(new FileInputStream(filename))
+    } else {
+      new FileInputStream(filename)
+    }
   }
 }

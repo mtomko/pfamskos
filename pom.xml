@@ -8,6 +8,7 @@
   <inceptionYear>2011</inceptionYear>
   <properties>
     <scala.version>2.8.1</scala.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
   <repositories>
@@ -16,6 +17,11 @@
       <name>Scala-Tools Maven2 Repository</name>
       <url>http://scala-tools.org/repo-releases</url>
     </repository>
+    <repository>
+      <id>undercover</id>
+      <name>Undercover Maven2 Repository</name>
+      <url>http://undercover.googlecode.com/svn/maven/repository</url>
+    </repository>
   </repositories>
 
   <pluginRepositories>
@@ -23,6 +29,10 @@
       <id>scala-tools.org</id>
       <name>Scala-Tools Maven2 Repository</name>
       <url>http://scala-tools.org/repo-releases</url>
+    </pluginRepository>
+    <pluginRepository>
+      <id>undercover</id>
+      <url>http://undercover.googlecode.com/svn/maven/repository</url>
     </pluginRepository>
   </pluginRepositories>
 
@@ -74,6 +84,7 @@
       <plugin>
         <groupId>org.scala-tools</groupId>
         <artifactId>maven-scala-plugin</artifactId>
+        <version>2.15.1</version>
         <executions>
           <execution>
             <goals>
@@ -85,13 +96,14 @@
         <configuration>
           <scalaVersion>${scala.version}</scalaVersion>
            <args>
-            <arg>-target:jvm-1.6</arg>
+            <arg>-target:jvm-1.5</arg>
           </args>
         </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-eclipse-plugin</artifactId>
+        <version>2.8</version>
         <configuration>
           <downloadSources>true</downloadSources>
           <buildcommands>
@@ -109,14 +121,33 @@
     </plugins>
   </build>
   <reporting>
-    <plugins>
-      <plugin>
-        <groupId>org.scala-tools</groupId>
-        <artifactId>maven-scala-plugin</artifactId>
-        <configuration>
-          <scalaVersion>${scala.version}</scalaVersion>
-        </configuration>
-      </plugin>
-    </plugins>
+  <plugins>
+    <plugin>
+      <groupId>org.scala-tools</groupId>
+      <artifactId>maven-scala-plugin</artifactId>
+      <version>2.15.1</version>
+      <configuration>
+        <scalaVersion>${scala.version}</scalaVersion>
+      </configuration>
+    </plugin>
+    <plugin>
+      <groupId>undercover</groupId>
+      <artifactId>undercover-maven-plugin</artifactId>
+      <configuration>
+        <includes>
+          <include>undercover/**</include>
+        </includes>
+        <excludes>
+          <exclude>undercover/ISample</exclude>
+        </excludes>
+        <sourceEncoding>UTF-8</sourceEncoding>
+        <formats>
+          <format>html</format>
+          <format>emmaxml</format>
+          <format>coberturaxml</format>
+        </formats>
+      </configuration>
+    </plugin>
+  </plugins>
   </reporting>
 </project>

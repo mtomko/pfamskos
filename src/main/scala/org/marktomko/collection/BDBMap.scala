@@ -1,4 +1,6 @@
-package org.marktomko.pfamskos
+package org.marktomko.collection
+
+import org.marktomko.util.Closeable
 
 import scala.collection.mutable.Map
 
@@ -7,7 +9,7 @@ import com.sleepycat.je.DatabaseEntry
 import com.sleepycat.je.LockMode
 import com.sleepycat.je.OperationStatus
 
-class BDBMapIterator(val cursor: Cursor) extends Iterator[Tuple2[String, String]] {
+class BDBMapIterator(val cursor: Cursor) extends Iterator[Tuple2[String, String]] with Closeable {
   var open = true
   val foundKey = new DatabaseEntry
   val foundData = new DatabaseEntry
@@ -28,7 +30,7 @@ class BDBMapIterator(val cursor: Cursor) extends Iterator[Tuple2[String, String]
     return (new String(foundKey.getData, "UTF-8"), new String(foundData.getData, "UTF-8"))
   }
   
-  def close() {
+  override def close() {
     cursor.close()
     open = false
   }

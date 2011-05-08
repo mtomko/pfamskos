@@ -1,4 +1,6 @@
-package org.marktomko.pfamskos
+package org.marktomko.collection
+
+import org.marktomko.util.Closeable
 
 import com.sleepycat.je.DatabaseConfig
 import com.sleepycat.je.DatabaseEntry
@@ -11,7 +13,7 @@ import com.sleepycat.je.OperationStatus
  * 
  * @author Mark Tomko, (c) 2011
  */
-abstract class BDBBacked[K, V >: Null <: AnyRef](val env: BDBEnvironment, val db: String, val keyFactory: DatabaseEntryFactory[K], val valueFactory: DatabaseEntryFactory[V]) {
+abstract class BDBBacked[K, V >: Null <: AnyRef](val env: BDBEnvironment, val db: String, val keyFactory: DatabaseEntryFactory[K], val valueFactory: DatabaseEntryFactory[V]) extends Closeable {
   val config = new DatabaseConfig
   config.setAllowCreate(true)
   val database = env.getDatabase(db, config)
@@ -51,7 +53,7 @@ abstract class BDBBacked[K, V >: Null <: AnyRef](val env: BDBEnvironment, val db
   /**
    * Closes the database and frees any allocated resources
    */
-  def close() {
+  override def close() {
     database.close
   }
 }
