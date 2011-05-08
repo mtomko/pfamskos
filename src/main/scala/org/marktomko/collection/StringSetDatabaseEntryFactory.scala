@@ -1,6 +1,4 @@
-package org.marktomko.pfamskos
-
-import org.marktomko.collection.DatabaseEntryFactory
+package org.marktomko.collection
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashSet

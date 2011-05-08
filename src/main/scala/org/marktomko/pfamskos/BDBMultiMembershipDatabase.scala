@@ -3,6 +3,7 @@ package org.marktomko.pfamskos
 import org.marktomko.collection.BDBBacked
 import org.marktomko.collection.BDBEnvironment
 import org.marktomko.collection.DatabaseEntryFactory
+import org.marktomko.collection.StringSetDatabaseEntryFactory
 import org.marktomko.collection.UTF8StringDatabaseEntryFactory
 
 /**

@@ -1,4 +1,4 @@
-package org.marktomko.pfamskos
+package org.marktomko.collection
 
 import org.junit.Test
 import org.junit.Assert.assertEquals
