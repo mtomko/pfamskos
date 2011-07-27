@@ -1,10 +1,8 @@
-package util
+package org.marktomko.util
 
 import java.io.FileInputStream
 
 import scala.io.Source
-
-import org.marktomko.pfamskos.SubstitutionStringTransform
 
 object CharTest {
   def main(args : Array[String]) : Unit = {

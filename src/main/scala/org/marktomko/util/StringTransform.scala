@@ -1,4 +1,4 @@
-package org.marktomko.pfamskos
+package org.marktomko.util
 
 trait StringTransform {
   def apply(in: String): String

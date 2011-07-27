@@ -7,6 +7,7 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.Set
 
 import org.codehaus.staxmate.out.SMNamespace
+import org.marktomko.pfamskos.collection.SubstitutionStringTransform
 
 /**
  * This class handles each Stockholm Record and produces a SKOS concept. It

@@ -1,7 +1,5 @@
 package org.marktomko.pfamskos.stockholm
 
-import org.marktomko.pfamskos.SubstitutionStringTransform
-
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.Map
@@ -9,6 +7,7 @@ import scala.collection.mutable.Map
 import scala.io.Source
 
 import java.io.InputStream
+import org.marktomko.pfamskos.collection.SubstitutionStringTransform
 
 /**
  * This object reads records from a file containing records in the
