@@ -4,12 +4,10 @@ import org.marktomko.collection.BDBEnvironment
 import org.marktomko.collection.BDBMap
 import org.marktomko.collection.BDBSet
 import org.marktomko.pfamskos.stockholm.CompositeRecordHandler
-import org.marktomko.pfamskos.stockholm.StockholmRecordHandler
 import org.marktomko.pfamskos.stockholm.StockholmRecordReader
 import org.marktomko.pfamskos.uniprot.UniprotNameHandler
 import org.marktomko.pfamskos.uniprot.UniprotReader
 
-import org.marktomko.util.Closeable
 import org.marktomko.util.Closer
 
 import java.io.FileInputStream
