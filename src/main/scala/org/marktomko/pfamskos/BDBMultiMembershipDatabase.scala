@@ -4,7 +4,7 @@ import org.marktomko.collection.BDBBacked
 import org.marktomko.collection.BDBEnvironment
 import org.marktomko.collection.StringSetDatabaseEntryFactory
 import org.marktomko.collection.UTF8StringDatabaseEntryFactory
-import collection.mutable.HashSet
+import scala.collection.mutable.HashSet
 
 /**
  * A multi-map view of membership
@@ -17,6 +17,6 @@ class BDBMultiMembershipDatabase(val e: BDBEnvironment, val d: String) extends B
   }
 
   def groupsFor(member: String): Set[String] = {
-    get(member).getOrElse(new scala.collection.mutable.HashSet[String]()).toSet
+    get(member).getOrElse(new HashSet[String]()).toSet
   }
 }

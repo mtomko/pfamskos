@@ -24,12 +24,14 @@ class SkosWriter(stream: OutputStream) {
   val RDFS = doc.getNamespace("http://www.w3.org/2000/01/rdf-schema#", "rdfs")
   val SKOS = doc.getNamespace("http://www.w3.org/2004/02/skos/core#", "skos")
   val DC = doc.getNamespace("http://purl.org/dc/terms/", "dc")
+  val UNIPROT = doc.getNamespace("http://purl.uniprot.org/core/", "uni")
 
   val root = doc.addElement(RDF, "RDF")
   root.predeclareNamespace(RDF)
   root.predeclareNamespace(RDFS)
   root.predeclareNamespace(SKOS)
   root.predeclareNamespace(DC)
+  root.predeclareNamespace(UNIPROT)
 
   /**
    * Writes a description of the concept scheme
@@ -58,7 +60,8 @@ class SkosWriter(stream: OutputStream) {
    * @param metadata
    */
   def writeConcept(about: String, scheme: String, prefLabel: String, altLabels: Iterable[String], broaderTerms: Iterable[String], narrowerTerms: Iterable[String], metadata: Map[Tuple2[SMNamespace, String], String]) {
-    val conceptElt = writeSimpleElement(root, SKOS, "Concept", Map((RDF, "about") -> about))    
+    val conceptElt = writeSimpleElement(root, RDF, "Description", Map((RDF, "about") -> about))
+    writeSimpleElement(conceptElt, RDF, "type", Map((RDF, "resource") -> (SKOS.getURI + "Concept")))
     writeSimpleElement(conceptElt, SKOS, "inScheme", Map((RDF, "resource") -> scheme))
 
     val prefLabelElt = writeSimpleElement(conceptElt, SKOS, "prefLabel", Map())
@@ -84,7 +87,7 @@ class SkosWriter(stream: OutputStream) {
    * Writes the close of the document to the stream
    */
   def close() {
-    doc.closeRoot
+    doc.closeRoot()
   }
 
   private def writeSimpleElement(parent: SMOutputElement, ns: SMNamespace, name: String, attributes: Map[Tuple2[SMNamespace, String], String]): SMOutputElement = {

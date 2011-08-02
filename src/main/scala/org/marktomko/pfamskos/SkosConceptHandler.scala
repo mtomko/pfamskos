@@ -7,7 +7,7 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.Set
 
 import org.codehaus.staxmate.out.SMNamespace
-import org.marktomko.pfamskos.collection.SubstitutionStringTransform
+import org.marktomko.util.SubstitutionStringTransform
 
 /**
  * This class handles each Stockholm Record and produces a SKOS concept. It
@@ -93,7 +93,7 @@ class SkosConceptHandler(val clanMembershipDB: MembershipDatabase, val familydb:
     }
     
     def getMultiLineField(record: StockholmRecord, field: String): String = {
-      if (record.getFields.contains(field)) {
+      if (record.getFields().contains(field)) {
         // joins successive values with a single space
         record.getValues(field).reduceLeft(_ + " " + _)
       } else {

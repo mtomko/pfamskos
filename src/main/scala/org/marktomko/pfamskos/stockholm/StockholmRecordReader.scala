@@ -7,7 +7,7 @@ import scala.collection.mutable.Map
 import scala.io.Source
 
 import java.io.InputStream
-import org.marktomko.pfamskos.collection.SubstitutionStringTransform
+import org.marktomko.util.SubstitutionStringTransform
 
 /**
  * This object reads records from a file containing records in the
@@ -78,7 +78,7 @@ object StockholmRecordReader {
     var memberFamilies: ListBuffer[String] = null
     var memberProteins: ListBuffer[String] = null
     
-    for (line <- Source.fromInputStream(stream, "UTF-8").getLines) {
+    for (line <- Source.fromInputStream(stream, "UTF-8").getLines()) {
       if (line == START) {
         // we've reached the start of a new record, so initialize a new record
         map = new HashMap[String, ListBuffer[String]]
