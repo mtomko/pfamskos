@@ -27,7 +27,7 @@ class CloserTest {
   def testTryCloseOneThrow() {
     val exception = new RuntimeException("foo")
     val resource = new CloseableStub(exception)
-    val expected: List[Tuple2[Closeable, Throwable]] = List((resource, exception))
+    val expected: List[(Closeable, Throwable)] = List((resource, exception))
     assertEquals(expected, Closer.tryClose(List(resource)))
   }
   
@@ -39,7 +39,7 @@ class CloserTest {
     val exception2 = new RuntimeException("foo2")
     val resource2 = new CloseableStub(exception2)
     
-    val expected: List[Tuple2[Closeable, Throwable]] = List((resource1, exception1), (resource2, exception2))
+    val expected: List[(Closeable, Throwable)] = List((resource1, exception1), (resource2, exception2))
     assertEquals(expected, Closer.tryClose(List(resource1, resource2)))
   }
   
@@ -50,7 +50,7 @@ class CloserTest {
     val exception2 = new RuntimeException("foo2")
     val resource2 = new CloseableStub(exception2)
     
-    val expected: List[Tuple2[Closeable, Throwable]] = List((resource2, exception2))
+    val expected: List[(Closeable, Throwable)] = List((resource2, exception2))
     assertEquals(expected, Closer.tryClose(List(resource1, resource2)))
   }
 }

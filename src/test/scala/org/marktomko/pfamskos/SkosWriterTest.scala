@@ -51,7 +51,9 @@ class SkosWriterTest {
       List(),
       List("http://pfam.sanger.ac.uk/clan/CL0023"),
       List("http://www.uniprot.org/uniprot/P04867"),
+      Map(),
       Map()
+
     )
     writer.close()
 

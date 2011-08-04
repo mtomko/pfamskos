@@ -39,7 +39,7 @@ class SkosWriter(stream: OutputStream) {
    * @param topConcepts
    * @param metadata
    */
-  def writeConceptScheme(about: String, topConcepts: List[String], metadata: Map[Tuple2[SMNamespace, String], String]) {
+  def writeConceptScheme(about: String, topConcepts: List[String], metadata: Map[(SMNamespace, String), String]) {
     val cs = root.addElement(SKOS, "ConceptScheme")
     cs.addAttribute(RDF, "about", about)
     
@@ -58,8 +58,9 @@ class SkosWriter(stream: OutputStream) {
    * @param broaderTerms
    * @param narrowerTerms
    * @param metadata
+   * @param nonCharMetadata
    */
-  def writeConcept(about: String, scheme: String, prefLabel: String, altLabels: Iterable[String], broaderTerms: Iterable[String], narrowerTerms: Iterable[String], metadata: Map[Tuple2[SMNamespace, String], String]) {
+  def writeConcept(about: String, scheme: String, prefLabel: String, altLabels: Iterable[String], broaderTerms: Iterable[String], narrowerTerms: Iterable[String], metadata: Map[(SMNamespace, String), String], nonCharMetadata: Map[(SMNamespace, String), List[(SMNamespace, String, String)]]) {
     val conceptElt = writeSimpleElement(root, RDF, "Description", Map((RDF, "about") -> about))
     writeSimpleElement(conceptElt, RDF, "type", Map((RDF, "resource") -> (SKOS.getURI + "Concept")))
     writeSimpleElement(conceptElt, SKOS, "inScheme", Map((RDF, "resource") -> scheme))
@@ -79,8 +80,17 @@ class SkosWriter(stream: OutputStream) {
     for(term <- broaderTerms) {
       writeSimpleElement(conceptElt, SKOS, "broader", Map((RDF, "resource") -> term))
     }
-    
-    metadata foreach ((md) => conceptElt.addElement(md._1._1, md._1._2).addCharacters(md._2))
+
+    for (datum <- metadata) {
+      conceptElt.addElement(datum._1._1, datum._1._2).addCharacters(datum._2)
+    }
+
+    for (datum <- nonCharMetadata) {
+      val elt = conceptElt.addElement(datum._1._1, datum._1._2)
+      for (attr <- datum._2) {
+        elt.addAttribute(attr._1, attr._2, attr._3)
+      }
+    }
   }
 
   /**
@@ -90,7 +100,7 @@ class SkosWriter(stream: OutputStream) {
     doc.closeRoot()
   }
 
-  private def writeSimpleElement(parent: SMOutputElement, ns: SMNamespace, name: String, attributes: Map[Tuple2[SMNamespace, String], String]): SMOutputElement = {
+  private def writeSimpleElement(parent: SMOutputElement, ns: SMNamespace, name: String, attributes: Map[(SMNamespace, String), String]): SMOutputElement = {
     val elt = parent.addElement(ns, name)
     attributes foreach ((attr) => (elt.addAttribute(attr._1._1, attr._1._2, attr._2)))
     elt

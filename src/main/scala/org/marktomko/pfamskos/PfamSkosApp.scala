@@ -91,7 +91,7 @@ object PfamSkosApp {
         } else {
           List(Pfam.getClanUrl(clan))
         }
-      skosWriter.writeConcept(Pfam.getFamilyUrl(family), Pfam.PFAM_URL, "Unknown Protein Family "+family, List(), broader, List(), Map())
+      skosWriter.writeConcept(Pfam.getFamilyUrl(family), Pfam.PFAM_URL, "Unknown Protein Family "+family, List(), broader, List(), Map(), Map())
     }
 
     for(protein <- proteindb) {
@@ -105,7 +105,7 @@ object PfamSkosApp {
 
       val prefLabel = uniprotdb.get(protein).getOrElse("Unknown Protein " + protein)
 
-      skosWriter.writeConcept(Pfam.getProteinUrl(protein), Pfam.PFAM_URL, prefLabel, List(), broader, List(), Map())
+      skosWriter.writeConcept(Pfam.getProteinUrl(protein), Pfam.PFAM_URL, prefLabel, List(), broader, List(), Map(), Map())
     }
     skosWriter.close()
   }

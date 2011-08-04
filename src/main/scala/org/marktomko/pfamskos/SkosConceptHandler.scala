@@ -3,11 +3,9 @@ package org.marktomko.pfamskos
 import org.marktomko.pfamskos.stockholm.StockholmRecord
 import org.marktomko.pfamskos.stockholm.StockholmRecordHandler
 
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.Set
-
 import org.codehaus.staxmate.out.SMNamespace
 import org.marktomko.util.SubstitutionStringTransform
+import scala.collection.mutable.{HashMap, Set}
 
 /**
  * This class handles each Stockholm Record and produces a SKOS concept. It
@@ -17,6 +15,8 @@ import org.marktomko.util.SubstitutionStringTransform
  * @author Mark Tomko, (c) 2011
  */
 class SkosConceptHandler(val clanMembershipDB: MembershipDatabase, val familydb: Set[String], val skosWriter: SkosWriter) extends StockholmRecordHandler {
+  val pubmedUrlPrefix = "http://www.ncbi.nlm.nih.gov/pubmed/"
+  val citationAttr = (skosWriter.UNIPROT, "citation")
   val labelTransform = new SubstitutionStringTransform("_", " ")
 
   override def apply(record: StockholmRecord) {
@@ -25,7 +25,8 @@ class SkosConceptHandler(val clanMembershipDB: MembershipDatabase, val familydb:
       // skip this record
     } else {
       // build a map of general metadata
-      val metadata = new HashMap[Tuple2[SMNamespace, String], String]
+      val metadata = new HashMap[(SMNamespace, String), String]
+      val nonCharMetadata = new HashMap[(SMNamespace, String), List[(SMNamespace, String, String)]]
       
       // get the record's accession - we'll use this in URLs
       val ac = StockholmRecordHandler.getRawAccession(record)
@@ -83,13 +84,27 @@ class SkosConceptHandler(val clanMembershipDB: MembershipDatabase, val familydb:
         } else {
           record.memberFamilies.map(Pfam.getFamilyUrl(_))
         }
-      
+
+      if (record.getFields().contains("RM")) {
+        val pmids = record.getValues("RM")
+        for (pmid <- pmids) {
+          val pmidTuple = (skosWriter.RDF, "resource", pubmedUrlPrefix + pmid)
+          if (nonCharMetadata.contains(citationAttr)) {
+            val citations:List[(SMNamespace, String, String)] = nonCharMetadata(citationAttr)
+            nonCharMetadata.put(citationAttr, citations :+ pmidTuple)
+          }
+          else {
+            nonCharMetadata.put(citationAttr, List(pmidTuple))
+          }
+        }
+      }
+
       // housekeeping - if we're about to write a family, remove it from the family db
       if (recordType == "Family") {
         familydb -= accession
       }
 
-      skosWriter.writeConcept(about, Pfam.PFAM_URL, preferred, alternate, broader, narrower, metadata.toMap)
+      skosWriter.writeConcept(about, Pfam.PFAM_URL, preferred, alternate, broader, narrower, metadata.toMap, nonCharMetadata.toMap)
     }
     
     def getMultiLineField(record: StockholmRecord, field: String): String = {

@@ -4,10 +4,10 @@ import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.Map
 
 class StockholmRecord(val id: String, val r: Map[String, ListBuffer[String]], val memberFamilies: List[String], val memberProteins: List[String]) {
-  private val record = r
+  private val record = r.toMap
   
   def getFields(): Set[String] = {
-    Set() ++ record.keys
+    record.keySet
   }
 
   def getValues(field: String): List[String] = {
