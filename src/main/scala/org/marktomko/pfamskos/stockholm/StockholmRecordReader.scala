@@ -50,19 +50,23 @@ object StockholmRecordReader {
   val TP = "TP" // type
 
   // this matches any line that is not a start, end, or part of an alignment
-  // the capturing groups are the prefix, and the rest of the line, which may 
+  // the capturing groups are the prefix, and the rest of the line, which may
   // be split further by subsequent regex
   val NON_ALIGNMENT_LINE = """#=(G[FSRC]) ([^\n]+)""".r
 
-  // this splits a #=GF line into a field and value 
+  val ALIGNMENT_LINE = """^([^#/][^ \n]+)[ ]+([^\n]+)$""".r
+
+  // this splits a #=GF line into a field and value
   val GF_ANNOTATION = """([A-Z]{2})[ ]+([^\n]+)""".r
-  
+
   val MB_PROTEIN_FAM = """([A-Z0-9\.]+);""".r
 
   val UNIPROT_PROTEIN_AC = """([A-Z0-9]+)\.[^\n]+""".r
 
   // this splits a #=GS line into a protein, subfield, and subfield value
   val GS_ANNOTATION = """([A-Z\d-_/]+)[ ]+([A-Z]{2})[ ]*([^\n]+)""".r
+
+  val PROTEIN_ALIGNMENT = """^([A-Z_0-9]+)/([0-9]+)-([0-9]+)$""".r
 
   val nullCharTransform = new SubstitutionStringTransform(new String(Array(0.toChar)), "")
   
@@ -74,19 +78,24 @@ object StockholmRecordReader {
   def read(stream: InputStream, handler: StockholmRecordHandler) {
     // these comprise mutable state representing a record that's being read
     var id: String = null
-    var map: Map[String, ListBuffer[String]] = null
+    var fieldMap: Map[String, ListBuffer[String]] = null
     var memberFamilies: ListBuffer[String] = null
     var memberProteins: ListBuffer[String] = null
+
+    var proteinAccessionMap: Map[String, String] = null
+    var proteinSequenceMap: Map[(String, (Int, Int)), String] = null
     
     for (line <- Source.fromInputStream(stream, "UTF-8").getLines()) {
       if (line == START) {
         // we've reached the start of a new record, so initialize a new record
-        map = new HashMap[String, ListBuffer[String]]
+        fieldMap = new HashMap[String, ListBuffer[String]]
         memberFamilies = new ListBuffer[String]
         memberProteins = new ListBuffer[String]
+        proteinAccessionMap = new HashMap[String, String]
+        proteinSequenceMap = new HashMap[(String, (Int, Int)), String]
       } else if (line == END) {
         // we've read the end of a record, so apply the handler
-        handler(new StockholmRecord(id, map, memberFamilies.toList, memberProteins.toList))
+        handler(new StockholmRecord(id, fieldMap, memberFamilies.toList, memberProteins.toList, proteinAccessionMap, proteinSequenceMap))
       } else if (line startsWith FIELD_PREFIX) {
         // we're reading lines comprising a record, so parse them
         val NON_ALIGNMENT_LINE(prefix, rest) = line
@@ -103,12 +112,12 @@ object StockholmRecordReader {
             } else {
               // everything else just gets stored
               val values =
-                if (map.contains(field)) map(field)
+                if (fieldMap.contains(field)) fieldMap(field)
                 else new ListBuffer[String]
-              
+
               // sanitize the input - this might need to be expanded a bit
               if (value != null) values += nullCharTransform(value)
-              map += (field -> values)
+              fieldMap += (field -> values)
             }
           case GS =>
             // GS lines represent (among other things) proteins comprising a
@@ -117,6 +126,9 @@ object StockholmRecordReader {
             if (field == AC) {
               val UNIPROT_PROTEIN_AC(proteinAccession) = value
               memberProteins += proteinAccession
+
+              //we also want to map the protein name/range to the accession
+              proteinAccessionMap += (protein -> proteinAccession)
             }
           case _ =>
             // GR and GC lines don't have information that we care about
@@ -125,6 +137,13 @@ object StockholmRecordReader {
       else {
         // this line doesn't match anything we know about, so skip it
         // is this too optimistic? should we throw?
+
+        // this line may correspond to a sequence alignment, so try to extract the sequence
+        val ALIGNMENT_LINE(proteinDesc, sequenceAlignment) = line
+        val PROTEIN_ALIGNMENT(protein, start, end) = proteinDesc
+        val proteinAcc:String = proteinAccessionMap.getOrElse(proteinDesc, null)
+        if (proteinAcc != null)
+          proteinSequenceMap += ((proteinAcc, (start.toInt, end.toInt)) -> sequenceAlignment)
       }
     }
   }

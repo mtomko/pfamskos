@@ -61,7 +61,7 @@ class SkosWriter(stream: OutputStream) {
    * @param nonCharMetadata
    */
   def writeConcept(about: String, scheme: String, prefLabel: String, altLabels: Iterable[String], broaderTerms: Iterable[String], narrowerTerms: Iterable[String], metadata: Map[(SMNamespace, String), String], nonCharMetadata: Map[(SMNamespace, String), List[(SMNamespace, String, String)]]) {
-    val conceptElt = writeSimpleElement(root, RDF, "Description", Map((RDF, "about") -> about))
+    val conceptElt = writeRdfDescription(root, about)
     writeSimpleElement(conceptElt, RDF, "type", Map((RDF, "resource") -> (SKOS.getURI + "Concept")))
     writeSimpleElement(conceptElt, SKOS, "inScheme", Map((RDF, "resource") -> scheme))
 
@@ -73,17 +73,14 @@ class SkosWriter(stream: OutputStream) {
       labelElt.addCharacters(label)
     }
     
-    for(term <- narrowerTerms) {
+    for(term <- narrowerTerms)
       writeSimpleElement(conceptElt, SKOS, "narrower", Map((RDF, "resource") -> term))
-    }
     
-    for(term <- broaderTerms) {
+    for(term <- broaderTerms)
       writeSimpleElement(conceptElt, SKOS, "broader", Map((RDF, "resource") -> term))
-    }
 
-    for (datum <- metadata) {
+    for (datum <- metadata)
       conceptElt.addElement(datum._1._1, datum._1._2).addCharacters(datum._2)
-    }
 
     for (datum <- nonCharMetadata) {
       val elt = conceptElt.addElement(datum._1._1, datum._1._2)
@@ -91,6 +88,24 @@ class SkosWriter(stream: OutputStream) {
         elt.addAttribute(attr._1, attr._2, attr._3)
       }
     }
+  }
+
+  def writeRdfDescription(parent: SMOutputElement, about: String): SMOutputElement =
+    writeSimpleElement(parent, RDF, "Description", Map((RDF, "about") -> about))
+
+  def writeSequenceAlignment(protein: String, family: String, alignment: String, range:(Int, Int)) {
+    val parent = writeRdfDescription(root, protein)
+    writeSimpleElement(parent, RDF, "type", Map((RDF, "resource") -> (UNIPROT.getURI + "Sequence")))
+    writeSimpleElement(parent, UNIPROT, "sequenceFor", Map((RDF, "about") -> family))
+
+    val begin = writeSimpleElement(parent, UNIPROT, "begin", Map())
+    begin.addCharacters(range._1.toString)
+
+    val end = writeSimpleElement(parent, UNIPROT, "end", Map())
+    end.addCharacters(range._2.toString)
+
+    val sequence = writeSimpleElement(parent, UNIPROT, "sequence", Map())
+    sequence.addCharacters(alignment)
   }
 
   /**

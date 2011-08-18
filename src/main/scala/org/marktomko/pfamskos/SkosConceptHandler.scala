@@ -43,33 +43,29 @@ class SkosConceptHandler(val clanMembershipDB: MembershipDatabase, val familydb:
       
       // translate the comments to the definition
       val cc = getMultiLineField(record, "CC") 
-      if (cc != null) {
+      if (cc != null)
         metadata += (skosWriter.SKOS, "definition") -> cc
-      }
 
       val about = 
-        if (recordType == "Family") {
+        if (recordType == "Family")
           Pfam.getFamilyUrl(accession)
-        } else {
+        else
           Pfam.getClanUrl(accession)
-        }
  
       val preferred = labelTransform(record.id)
       val alternate =
-        if (record.id == preferred) {
+        if (record.id == preferred)
           List()
-        } else {
+        else
           List(record.id)
-        }
 
       val broader =
         if (recordType == "Family") {
           val clan = clanMembershipDB.groupFor(accession)
-          if (clan == null) {
+          if (clan == null)
             List()
-          } else {
+          else
             List(Pfam.getClanUrl(clan))
-          }
         } else {
           // clans have a single parent
           List()
@@ -100,20 +96,21 @@ class SkosConceptHandler(val clanMembershipDB: MembershipDatabase, val familydb:
       }
 
       // housekeeping - if we're about to write a family, remove it from the family db
-      if (recordType == "Family") {
+      if (recordType == "Family")
         familydb -= accession
-      }
 
       skosWriter.writeConcept(about, Pfam.PFAM_URL, preferred, alternate, broader, narrower, metadata.toMap, nonCharMetadata.toMap)
-    }
-    
-    def getMultiLineField(record: StockholmRecord, field: String): String = {
-      if (record.getFields().contains(field)) {
-        // joins successive values with a single space
-        record.getValues(field).reduceLeft(_ + " " + _)
-      } else {
-        null
+      for (((protein, (start, end)), alignment) <- record.proteinSequenceMap) {
+        val proteinUrl = Pfam.UNIPROT_URL + "/" + protein
+        skosWriter.writeSequenceAlignment(proteinUrl, Pfam.getFamilyUrl(accession), alignment, (start, end))
       }
     }
+    
+    def getMultiLineField(record: StockholmRecord, field: String): String =
+      if (record.getFields().contains(field))
+        // joins successive values with a single space
+        record.getValues(field).reduceLeft(_ + " " + _)
+      else
+        null
   }
 }
