@@ -83,8 +83,8 @@ class SkosWriter(stream: OutputStream) {
       conceptElt.addElement(datum._1._1, datum._1._2).addCharacters(datum._2)
 
     for (datum <- nonCharMetadata) {
-      val elt = conceptElt.addElement(datum._1._1, datum._1._2)
       for (attr <- datum._2) {
+        val elt = conceptElt.addElement(datum._1._1, datum._1._2)
         elt.addAttribute(attr._1, attr._2, attr._3)
       }
     }
