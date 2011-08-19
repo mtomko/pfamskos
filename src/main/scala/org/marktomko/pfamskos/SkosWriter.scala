@@ -79,13 +79,13 @@ class SkosWriter(stream: OutputStream) {
     for(term <- broaderTerms)
       writeSimpleElement(conceptElt, SKOS, "broader", Map((RDF, "resource") -> term))
 
-    for (datum <- metadata)
-      conceptElt.addElement(datum._1._1, datum._1._2).addCharacters(datum._2)
+    for (((namespace, property), value) <- metadata)
+      conceptElt.addElement(namespace, property).addCharacters(value)
 
-    for (datum <- nonCharMetadata) {
-      for (attr <- datum._2) {
-        val elt = conceptElt.addElement(datum._1._1, datum._1._2)
-        elt.addAttribute(attr._1, attr._2, attr._3)
+    for (((eltNamespace, eltName), values) <- nonCharMetadata) {
+      for ((attrNamespace, attribute, value) <- values) {
+        val elt = conceptElt.addElement(eltNamespace, eltName)
+        elt.addAttribute(attrNamespace, attribute, value)
       }
     }
   }
