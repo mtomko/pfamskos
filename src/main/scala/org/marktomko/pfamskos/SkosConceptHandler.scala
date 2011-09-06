@@ -20,7 +20,14 @@ class SkosConceptHandler(val clanMembershipDB: MembershipDatabase, val familydb:
   val labelTransform = new SubstitutionStringTransform("_", " ")
 
   override def apply(record: StockholmRecord) {
-    val recordType = StockholmRecordHandler.getType(record)
+    val recordType = StockholmRecordHandler.getType(record) match {
+      case "Clan" => "Clan"
+      case "Domain" => "Family"
+      case "Family" => "Family"
+      case "Motif" => "Family"
+      case "Repeat" => "Family"
+    }
+    
     if (recordType == "Domain" || recordType == "Repeat" || recordType == "Motif") {
       // skip this record
     } else {

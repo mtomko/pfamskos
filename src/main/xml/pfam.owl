@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF
+        xmlns="http://web.simmons.edu/~tomko/pfam/"
+        xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+    <owl:Ontology rdf:about="">
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+            Classes used for Pfam protein family annotation.
+        </rdfs:comment>
+    </owl:Ontology>
+
+    <owl:Class rdf:about="Clan">
+        <rdfs:subClassOf rdf:resource="http://www.w3.org/2004/02/skos/core#Concept" />
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+            A Pfam clan representing a cluster of families grouped together based on
+            similarity of sequence, structure or profile-HMM.
+        </rdfs:comment>
+    </owl:Class>
+
+    <owl:Class rdf:about="Family">
+        <rdfs:subClassOf rdf:resource="http://www.w3.org/2004/02/skos/core#Concept" />
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+            A collection of related proteins
+        </rdfs:comment>
+    </owl:Class>
+
+    <owl:Class rdf:about="Domain">
+        <rdfs:subClassOf rdf:resource="Family" />
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+            A structural unit which can be found in multiple protein contexts
+        </rdfs:comment>
+    </owl:Class>
+
+    <owl:Class rdf:about="Motif">
+        <rdfs:subClassOf rdf:resource="Family" />
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+            A short unit found outside globular domains
+        </rdfs:comment>
+    </owl:Class>
+
+    <owl:Class rdf:about="Repeat">
+        <rdfs:subClassOf rdf:resource="Family" />
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+            A short unit which is unstable in isolation but forms a stable structure when multiple copies are present
+        </rdfs:comment>
+    </owl:Class>
+
+</rdf:RDF>
