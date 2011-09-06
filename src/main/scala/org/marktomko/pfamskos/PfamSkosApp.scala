@@ -94,6 +94,7 @@ object PfamSkosApp {
       skosWriter.writeConcept(Pfam.getFamilyUrl(family), Pfam.PFAM_URL, "Unknown Protein Family "+family, List(), broader, List(), Map(), Map())
     }
 
+    /*
     for(protein <- proteindb) {
       val families = familyMemberDB.groupsFor(protein)
       val broader: Iterable[String] = 
@@ -107,6 +108,8 @@ object PfamSkosApp {
 
       skosWriter.writeConcept(Pfam.getProteinUrl(protein), Pfam.PFAM_URL, prefLabel, List(), broader, List(), Map(), Map())
     }
+    */
+
     skosWriter.close()
   }
   

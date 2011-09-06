@@ -20,104 +20,100 @@ class SkosConceptHandler(val clanMembershipDB: MembershipDatabase, val familydb:
   val labelTransform = new SubstitutionStringTransform("_", " ")
 
   override def apply(record: StockholmRecord) {
-    val recordType = StockholmRecordHandler.getType(record) match {
+    val recordType = StockholmRecordHandler.getType(record)
+    val conceptClass = recordType match {
       case "Clan" => "Clan"
       case "Domain" => "Family"
       case "Family" => "Family"
       case "Motif" => "Family"
       case "Repeat" => "Family"
     }
-    
-    if (recordType == "Domain" || recordType == "Repeat" || recordType == "Motif") {
-      // skip this record
-    } else {
-      // build a map of general metadata
-      val metadata = new HashMap[(SMNamespace, String), String]
-      val nonCharMetadata = new HashMap[(SMNamespace, String), List[(SMNamespace, String, String)]]
-      
-      // get the record's accession - we'll use this in URLs
-      val ac = StockholmRecordHandler.getRawAccession(record)
-      val accession = StockholmRecordHandler.getAccession(record)
 
-      // put the raw accession information into the map as externalId
-      metadata += (skosWriter.SKOS, "externalId") -> ac
-      
-      // translate the definition to the scope note
-      val de = getMultiLineField(record, "DE")
-      if (de != null) {
-        metadata += (skosWriter.SKOS, "scopeNote") -> de
-      }
-      
-      // translate the comments to the definition
-      val cc = getMultiLineField(record, "CC") 
-      if (cc != null)
-        metadata += (skosWriter.SKOS, "definition") -> cc
+    // build a map of general metadata
+    val metadata = new HashMap[(SMNamespace, String), String]
+    val nonCharMetadata = new HashMap[(SMNamespace, String), List[(SMNamespace, String, String)]]
 
-      val about = 
-        if (recordType == "Family")
-          Pfam.getFamilyUrl(accession)
-        else
-          Pfam.getClanUrl(accession)
- 
-      val preferred = labelTransform(record.id)
-      val alternate =
-        if (record.id == preferred)
+    // get the record's accession - we'll use this in URLs
+    val accession = StockholmRecordHandler.getAccession(record)
+
+    // put the raw accession information into the map as externalId
+    metadata += (skosWriter.SKOS, "externalId") -> StockholmRecordHandler.getRawAccession(record)
+
+    // translate the definition to the scope note
+    val de = getMultiLineField(record, "DE")
+    if (de != null) {
+      metadata += (skosWriter.SKOS, "scopeNote") -> de
+    }
+
+    // translate the comments to the definition
+    val cc = getMultiLineField(record, "CC")
+    if (cc != null)
+      metadata += (skosWriter.SKOS, "definition") -> cc
+
+    val about =
+      if (conceptClass == "Family")
+        Pfam.getFamilyUrl(accession)
+      else
+        Pfam.getClanUrl(accession)
+
+    val preferred = labelTransform(record.id)
+    val alternate =
+      if (record.id == preferred)
+        List()
+      else
+        List(record.id)
+
+    val broader =
+      if (conceptClass == "Family") {
+        val clan = clanMembershipDB.groupFor(accession)
+        if (clan == null)
           List()
         else
-          List(record.id)
-
-      val broader =
-        if (recordType == "Family") {
-          val clan = clanMembershipDB.groupFor(accession)
-          if (clan == null)
-            List()
-          else
-            List(Pfam.getClanUrl(clan))
-        } else {
-          // clans have a single parent
-          List()
-        }
-
-      val narrower =
-        if (recordType == "Family") {
-          record.memberProteins.map((protein) => {
-            Pfam.UNIPROT_URL + "/" + protein
-          })
-          //List() // temporarily ignore all proteins!
-        } else {
-          record.memberFamilies.map(Pfam.getFamilyUrl(_))
-        }
-
-      if (record.getFields().contains("RM")) {
-        val pmids = record.getValues("RM")
-        for (pmid <- pmids) {
-          val pmidTuple = (skosWriter.RDF, "resource", pubmedUrlPrefix + pmid)
-          if (nonCharMetadata.contains(citationAttr)) {
-            val citations:List[(SMNamespace, String, String)] = nonCharMetadata(citationAttr)
-            nonCharMetadata.put(citationAttr, citations :+ pmidTuple)
-          }
-          else {
-            nonCharMetadata.put(citationAttr, List(pmidTuple))
-          }
-        }
+          List(Pfam.getClanUrl(clan))
+      } else {
+        // clans have a single parent
+        List()
       }
 
-      // housekeeping - if we're about to write a family, remove it from the family db
-      if (recordType == "Family")
-        familydb -= accession
+    val narrower =
+      if (conceptClass == "Family") {
+        record.memberProteins.map((protein) => {
+          Pfam.UNIPROT_URL + "/" + protein
+        })
+      } else {
+        record.memberFamilies.map(Pfam.getFamilyUrl(_))
+      }
 
-      skosWriter.writeConcept(about, Pfam.PFAM_URL, preferred, alternate, broader, narrower, metadata.toMap, nonCharMetadata.toMap)
-      for (((protein, (start, end)), alignment) <- record.proteinSequenceMap) {
-        val proteinUrl = Pfam.UNIPROT_URL + "/" + protein
-        skosWriter.writeSequenceAlignment(proteinUrl, Pfam.getFamilyUrl(accession), alignment, (start, end))
+    if (record.getFields().contains("RM")) {
+      val pmids = record.getValues("RM")
+      for (pmid <- pmids) {
+        val pmidTuple = (skosWriter.RDF, "resource", pubmedUrlPrefix + pmid)
+        if (nonCharMetadata.contains(citationAttr)) {
+          val citations:List[(SMNamespace, String, String)] = nonCharMetadata(citationAttr)
+          nonCharMetadata.put(citationAttr, citations :+ pmidTuple)
+        }
+        else {
+          nonCharMetadata.put(citationAttr, List(pmidTuple))
+        }
       }
     }
-    
-    def getMultiLineField(record: StockholmRecord, field: String): String =
-      if (record.getFields().contains(field))
-        // joins successive values with a single space
-        record.getValues(field).reduceLeft(_ + " " + _)
-      else
-        null
+
+    // housekeeping - if we're about to write a family, remove it from the family db
+    if (conceptClass == "Family")
+      familydb -= accession
+
+    skosWriter.writeConcept(about, (skosWriter.PFAM, recordType), Pfam.PFAM_URL, preferred, alternate, broader, narrower, metadata.toMap, nonCharMetadata.toMap)
+    for (((protein, (start, end)), alignment) <- record.proteinSequenceMap) {
+      val proteinUrl = Pfam.UNIPROT_URL + "/" + protein
+      skosWriter.writeSequenceAlignment(proteinUrl, Pfam.getFamilyUrl(accession), alignment, (start, end))
+    }
   }
+
+  def getMultiLineField(record: StockholmRecord, field: String): String =
+    if (record.getFields().contains(field))
+    // joins successive values with a single space
+      record.getValues(field).reduceLeft(_ + " " + _)
+    else
+      null
+
 }

@@ -7,13 +7,14 @@ import javax.xml.stream.XMLOutputFactory
 import org.codehaus.staxmate.out.SMNamespace
 import org.codehaus.staxmate.out.SMOutputElement
 import org.codehaus.staxmate.SMOutputFactory
+import org.marktomko.util.Closeable
 
 /**
  * Writes an RDF/XML representation of a SKOS scheme to a stream.
  * 
  * @author Mark Tomko, (c) 2011
  */
-class SkosWriter(stream: OutputStream) {
+class SkosWriter(stream: OutputStream) extends Closeable {
   val factory = XMLOutputFactory.newInstance()
   val sw = factory.createXMLStreamWriter(stream, "UTF-8")
   val doc = SMOutputFactory.createOutputDocument(sw, "1.0", "UTF-8", true)
@@ -25,6 +26,7 @@ class SkosWriter(stream: OutputStream) {
   val SKOS = doc.getNamespace("http://www.w3.org/2004/02/skos/core#", "skos")
   val DC = doc.getNamespace("http://purl.org/dc/terms/", "dc")
   val UNIPROT = doc.getNamespace("http://purl.uniprot.org/core/", "uni")
+  val PFAM = doc.getNamespace("http://web.simmons.edu/~tomko/pfam#", "pfam")
 
   val root = doc.addElement(RDF, "RDF")
   root.predeclareNamespace(RDF)
@@ -32,12 +34,13 @@ class SkosWriter(stream: OutputStream) {
   root.predeclareNamespace(SKOS)
   root.predeclareNamespace(DC)
   root.predeclareNamespace(UNIPROT)
+  root.predeclareNamespace(PFAM)
 
   /**
    * Writes a description of the concept scheme
    * @param about
    * @param topConcepts
-   * @param metadata
+   * @param characterMetadata
    */
   def writeConceptScheme(about: String, topConcepts: List[String], metadata: Map[(SMNamespace, String), String]) {
     val cs = root.addElement(SKOS, "ConceptScheme")
@@ -48,7 +51,7 @@ class SkosWriter(stream: OutputStream) {
     }
     metadata foreach ((md) => cs.addElement(md._1._1, md._1._2).addCharacters(md._2))
   }
-  
+
   /**
    * Writes a description of a concept
    * @param about
@@ -57,31 +60,87 @@ class SkosWriter(stream: OutputStream) {
    * @param altLabels
    * @param broaderTerms
    * @param narrowerTerms
-   * @param metadata
-   * @param nonCharMetadata
+   * @param characterMetadata
+   * @param attributeMetadata
    */
-  def writeConcept(about: String, scheme: String, prefLabel: String, altLabels: Iterable[String], broaderTerms: Iterable[String], narrowerTerms: Iterable[String], metadata: Map[(SMNamespace, String), String], nonCharMetadata: Map[(SMNamespace, String), List[(SMNamespace, String, String)]]) {
+  def writeConcept(about: String,
+                   scheme: String,
+                   prefLabel: String,
+                   altLabels: Iterable[String],
+                   broaderTerms: Iterable[String],
+                   narrowerTerms: Iterable[String],
+                   metadata: Map[(SMNamespace, String), String],
+                   attributeMetadata: Map[(SMNamespace, String), List[(SMNamespace, String, String)]]) {
+    writeConcept(about, (SKOS, "Concept"), scheme, prefLabel, altLabels, broaderTerms, narrowerTerms, metadata, attributeMetadata)
+  }
+
+  /**
+   * Writes a description of a concept
+   * @param about
+   * @param conceptType
+   * @param scheme
+   * @param prefLabel
+   * @param altLabels
+   * @param broaderTerms
+   * @param narrowerTerms
+   * @param characterMetadata
+   * @param attributeMetadata
+   */
+  def writeConcept(about: String,
+                   conceptType:(SMNamespace, String),
+                   scheme: String,
+                   prefLabel: String,
+                   altLabels: Iterable[String],
+                   broaderTerms: Iterable[String],
+                   narrowerTerms: Iterable[String],
+                   characterMetadata: Map[(SMNamespace, String), String],
+                   attributeMetadata: Map[(SMNamespace, String), List[(SMNamespace, String, String)]]) {
     val conceptElt = writeRdfDescription(root, about)
-    writeSimpleElement(conceptElt, RDF, "type", Map((RDF, "resource") -> (SKOS.getURI + "Concept")))
+    writeSimpleElement(conceptElt, RDF, "type", Map((RDF, "resource") -> (conceptType._1.getURI + conceptType._2)))
     writeSimpleElement(conceptElt, SKOS, "inScheme", Map((RDF, "resource") -> scheme))
 
+    addPrefLabel(conceptElt, prefLabel)
+
+    addAltLabels(altLabels, conceptElt)
+
+    addNarrowerTerms(narrowerTerms, conceptElt)
+
+    addBroaderTerms(broaderTerms, conceptElt)
+
+    addCharacterMetadata(characterMetadata, conceptElt)
+
+    addMetadata(attributeMetadata, conceptElt)
+  }
+
+  def addNarrowerTerms(narrowerTerms: Iterable[String], conceptElt: SMOutputElement) {
+    for (term <- narrowerTerms)
+    writeSimpleElement(conceptElt, SKOS, "narrower", Map((RDF, "resource") -> term))
+  }
+
+  def addBroaderTerms(broaderTerms: Iterable[String], conceptElt: SMOutputElement) {
+    for (term <- broaderTerms)
+    writeSimpleElement(conceptElt, SKOS, "broader", Map((RDF, "resource") -> term))
+  }
+
+  def addCharacterMetadata(metadata: Map[(SMNamespace, String), String], conceptElt: SMOutputElement) {
+    for (((namespace, property), value) <- metadata)
+    conceptElt.addElement(namespace, property).addCharacters(value)
+  }
+
+
+  def addPrefLabel(conceptElt: SMOutputElement, prefLabel: String)  {
     val prefLabelElt = writeSimpleElement(conceptElt, SKOS, "prefLabel", Map())
     prefLabelElt.addCharacters(prefLabel)
-    
-    for(label <- altLabels) {
+  }
+
+  def addAltLabels(altLabels: scala.Iterable[String], conceptElt: SMOutputElement) {
+    for (label <- altLabels) {
       val labelElt = writeSimpleElement(conceptElt, SKOS, "altLabel", Map())
       labelElt.addCharacters(label)
     }
-    
-    for(term <- narrowerTerms)
-      writeSimpleElement(conceptElt, SKOS, "narrower", Map((RDF, "resource") -> term))
-    
-    for(term <- broaderTerms)
-      writeSimpleElement(conceptElt, SKOS, "broader", Map((RDF, "resource") -> term))
+  }
 
-    for (((namespace, property), value) <- metadata)
-      conceptElt.addElement(namespace, property).addCharacters(value)
-
+  def addMetadata(nonCharMetadata: Map[(SMNamespace, String), List[(SMNamespace, String, String)]], conceptElt: SMOutputElement) {
     for (((eltNamespace, eltName), values) <- nonCharMetadata) {
       for ((attrNamespace, attribute, value) <- values) {
         val elt = conceptElt.addElement(eltNamespace, eltName)
@@ -89,6 +148,7 @@ class SkosWriter(stream: OutputStream) {
       }
     }
   }
+
 
   def writeRdfDescription(parent: SMOutputElement, about: String): SMOutputElement =
     writeSimpleElement(parent, RDF, "Description", Map((RDF, "about") -> about))
@@ -111,7 +171,7 @@ class SkosWriter(stream: OutputStream) {
   /**
    * Writes the close of the document to the stream
    */
-  def close() {
+  override def close() {
     doc.closeRoot()
   }
 
