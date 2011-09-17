@@ -94,6 +94,7 @@ object PfamSkosApp {
       skosWriter.writeConcept(Pfam.getFamilyUrl(family), Pfam.PFAM_URL, "Unknown Protein Family "+family, List(), broader, List(), Map(), Map())
     }
 
+    //TODO: make this optional based on command-line arguments
     /*
     for(protein <- proteindb) {
       val families = familyMemberDB.groupsFor(protein)

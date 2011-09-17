@@ -15,8 +15,14 @@ import scala.collection.mutable.{HashMap, Set}
  * @author Mark Tomko, (c) 2011
  */
 class SkosConceptHandler(val clanMembershipDB: MembershipDatabase, val familydb: Set[String], val skosWriter: SkosWriter) extends StockholmRecordHandler {
+  val INTERPRO_REGEX = """^INTERPRO; ([A-Z0-9]+);$""".r
+  val PROSITE_REGEX = """^PROSITE; ([A-Z0-9]+);$""".r
+  val interproUrlPrefix = "http://www.ebi.ac.uk/interpro/IEntry?ac="
+  val prositeUrlPrefix = "http://prosite.expasy.org/cgi-bin/prosite/prosite-search-ac?"
+
   val pubmedUrlPrefix = "http://www.ncbi.nlm.nih.gov/pubmed/"
   val citationAttr = (skosWriter.UNIPROT, "citation")
+
   val labelTransform = new SubstitutionStringTransform("_", " ")
 
   override def apply(record: StockholmRecord) {
@@ -98,11 +104,30 @@ class SkosConceptHandler(val clanMembershipDB: MembershipDatabase, val familydb:
       }
     }
 
+    val relatedReferences =
+      if (record.getFields().contains("DR")) {
+        for (dr <- record.getValues("DR")) yield {
+          dr match {
+            case INTERPRO_REGEX(interproAccession) => {
+              Some(interproUrlPrefix + interproAccession)
+            }
+            case PROSITE_REGEX(prositeAccession) => {
+              Some(prositeUrlPrefix + prositeAccession)
+            }
+            case _ => None
+          }
+        }
+      }
+      else
+        List()
+
+    val related: Iterable[String] = relatedReferences filter { _ != None } map { _.get }
+
     // housekeeping - if we're about to write a family, remove it from the family db
     if (conceptClass == "Family")
       familydb -= accession
 
-    skosWriter.writeConcept(about, (skosWriter.PFAM, recordType), Pfam.PFAM_URL, preferred, alternate, broader, narrower, metadata.toMap, nonCharMetadata.toMap)
+    skosWriter.writeConcept(about, (skosWriter.PFAM, recordType), Pfam.PFAM_URL, preferred, alternate, broader, narrower, related, metadata.toMap, nonCharMetadata.toMap)
     for (((protein, (start, end)), alignment) <- record.proteinSequenceMap) {
       val proteinUrl = Pfam.UNIPROT_URL + "/" + protein
       skosWriter.writeSequenceAlignment(proteinUrl, Pfam.getFamilyUrl(accession), alignment, (start, end))

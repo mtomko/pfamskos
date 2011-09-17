@@ -47,6 +47,7 @@ object StockholmRecordReader {
   val DE = "DE" // description
   val MB = "MB" // member protein family
   val RM = "RM" // medline reference number
+  val DR = "DR" // database reference
   val TP = "TP" // type
 
   // this matches any line that is not a start, end, or part of an alignment
@@ -135,9 +136,6 @@ object StockholmRecordReader {
         }
       }
       else {
-        // this line doesn't match anything we know about, so skip it
-        // is this too optimistic? should we throw?
-
         // this line may correspond to a sequence alignment, so try to extract the sequence
         val ALIGNMENT_LINE(proteinDesc, sequenceAlignment) = line
         val PROTEIN_ALIGNMENT(protein, start, end) = proteinDesc
